@@ -25,6 +25,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
 
+    // test
     private final String TAG = "MainActivity";
     private GoogleMap googleMap;
     private MapFragment mapFragment;
