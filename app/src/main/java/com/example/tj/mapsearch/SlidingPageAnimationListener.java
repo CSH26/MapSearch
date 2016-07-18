@@ -11,21 +11,39 @@ public class SlidingPageAnimationListener implements Animation.AnimationListener
 
     private boolean isPageOpen = false;
     private LinearLayout slidingpage;
+    private int ANIMATION_TYPE;
 
-    public SlidingPageAnimationListener(LinearLayout slidingpage) {
+
+    public SlidingPageAnimationListener(LinearLayout slidingpage, int ANIMATION_TYPE) {
         this.slidingpage = slidingpage;
+        this.ANIMATION_TYPE = ANIMATION_TYPE;
     }
 
     @Override
     public void onAnimationEnd(Animation animation) {
-        if(isPageOpen){
-            slidingpage.setVisibility(View.INVISIBLE);
-            isPageOpen = false;
+        switch (ANIMATION_TYPE){
+            case 100:
+                if(isPageOpen){
+                    slidingpage.setVisibility(View.INVISIBLE);
+                    isPageOpen = false;
+                }
+                else
+                {
+                    isPageOpen = true;
+                }
+                break;
+            case 200:
+                if(isPageOpen){
+                    slidingpage.setVisibility(View.INVISIBLE);
+                    isPageOpen = false;
+                }
+                else
+                {
+                    isPageOpen = true;
+                }
+                break;
         }
-        else
-        {
-            isPageOpen = true;
-        }
+
     }
     @Override
     public void onAnimationStart(Animation animation) {

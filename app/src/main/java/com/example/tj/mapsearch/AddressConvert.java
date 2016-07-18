@@ -6,35 +6,85 @@ import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.tj.mapsearch.AddressList.AddressListAdapter;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
 
 public class AddressConvert extends AppCompatActivity {
+
+    private final static int ADDRESS_CONVERT_ACTIVITY_SHOW_MAP_ANIMATECAMERA_BUTTON = 200;
+    private int previousPosition = -1;
     Geocoder gc;
     TextView contentsText;
     Address outAddr;
     int addrCount;
     StringBuffer outAddrStr;
-    Button mapAnimate;
+    Button mapAnimateCamera;
+    ListView addressList;
+    Animation showAnim;
+    Animation behindAnim;
+    LinearLayout slidingLayout;
+    AddressListAdapter addressListAdapter;
+    SlidingPageAnimationListener animationListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_address_convert);
-        Toast.makeText(getApplicationContext(),"Ok",Toast.LENGTH_SHORT).show();
-        contentsText = (TextView)findViewById(R.id.textView);
-        mapAnimate = (Button)findViewById(R.id.mapAnimate);
-        mapAnimate.setOnClickListener(new View.OnClickListener() {
+
+        slidingLayout = (LinearLayout)findViewById(R.id.slidingLayout);
+        showAnim = AnimationUtils.loadAnimation(this,R.anim.translate_selected_list);
+        behindAnim = AnimationUtils.loadAnimation(this,R.anim.translate_nonselected_list);
+        behindAnim.setFillAfter(true);
+        animationListener = new SlidingPageAnimationListener(slidingLayout,ADDRESS_CONVERT_ACTIVITY_SHOW_MAP_ANIMATECAMERA_BUTTON);
+        showAnim.setAnimationListener(animationListener);
+        behindAnim.setAnimationListener(animationListener);
+        addressList = (ListView)findViewById(R.id.addressList);
+
+        final View header = getLayoutInflater().inflate(R.layout.listview_header,null,false);
+
+        addressListAdapter = new AddressListAdapter(this);
+        addressList.setAdapter(addressListAdapter);
+        addressList.addHeaderView(header);
+        addressList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                if(position == getPreviousPosition()){
+                    if(animationListener.isPageOpen()){
+                        slidingLayout.startAnimation(behindAnim);
+                        setPreviousPosition(position);
+                    }
+                    else{
+                        slidingLayout.setVisibility(View.VISIBLE);
+                        slidingLayout.startAnimation(showAnim);
+                        setPreviousPosition(position);
+                    }
+                }else {
+                    slidingLayout.setVisibility(View.VISIBLE);
+                    slidingLayout.startAnimation(showAnim);
+                    setPreviousPosition(position);
+                }
+            }
+        });
+
+        mapAnimateCamera = (Button)findViewById(R.id.mapAnimateCamera);
+        mapAnimateCamera.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent resultIntent = new Intent();
-                resultIntent.putExtra("latitude",outAddr.getLatitude());
-                resultIntent.putExtra("longitude",outAddr.getLongitude());
+                resultIntent.putExtra("LATITUDE",outAddr.getLatitude());
+                resultIntent.putExtra("LONGITUDE",outAddr.getLongitude());
 
                 setResult(RESULT_OK,resultIntent);
                 finish();
@@ -44,9 +94,9 @@ public class AddressConvert extends AppCompatActivity {
         gc = new Geocoder(this, Locale.KOREA);
         Bundle extras = getIntent().getExtras();
         if(extras == null)
-            Toast.makeText(getApplicationContext(),"주소 입력 안함",Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(),"없는 주소이거나 주소명을 잘못 입력하셨습니다.",Toast.LENGTH_LONG).show();
 
-        String search = extras.getString("address");
+        String search = extras.getString("ADDRESS");
         searchLocation(search);
     }
 
@@ -76,4 +126,11 @@ public class AddressConvert extends AppCompatActivity {
         }
     }
 
+    public int getPreviousPosition() {
+        return previousPosition;
+    }
+
+    public void setPreviousPosition(int previousPosition) {
+        this.previousPosition = previousPosition;
+    }
 }

@@ -3,6 +3,7 @@ package com.example.tj.mapsearch;
 
 import android.*;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -21,8 +22,10 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -36,6 +39,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,View.OnClickListener {
 
     // test2
+    private final static int MAINACTIVITY_SHOW_SEARCH_BUTTON = 100;
+    private final static int REQUEST_CODE = 2000;
     private final String TAG = "MainActivity";
     private GoogleMap googleMap;
     private MapFragment mapFragment;
@@ -46,7 +51,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     SlidingPageAnimationListener slidingPageAnimationListener;
     LinearLayout sliding;
     Animation translateBottomAnim, translateTopAnim;
-    Button spreadButton;
+    Button spreadButton, addressSearch;
+    EditText addressBox;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,9 +65,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         //googleMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
         // 맵프래그먼트 객체 참조
 
+        addressBox = (EditText) findViewById(R.id.addressBox);
         spreadButton = (Button)findViewById(R.id.spread);
+        addressSearch = (Button)findViewById(R.id.addressSearch);
         sliding = (LinearLayout)findViewById(R.id.sliding);
-        slidingPageAnimationListener = new SlidingPageAnimationListener(sliding);
+        slidingPageAnimationListener = new SlidingPageAnimationListener(sliding,MAINACTIVITY_SHOW_SEARCH_BUTTON);
         translateBottomAnim = AnimationUtils.loadAnimation(this,R.anim.translate_bottom);
         translateTopAnim = AnimationUtils.loadAnimation(this,R.anim.translate_top);
         translateBottomAnim.setAnimationListener(slidingPageAnimationListener);
@@ -86,6 +95,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void registerClickListener(){
         spreadButton.setOnClickListener(this);
+        addressSearch.setOnClickListener(this);
     }
 
     @Override
@@ -236,6 +246,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     spreadButton.setText("접기");
                 }
                 break;
+            case R.id.addressSearch:
+                Intent addressConvertIntent = new Intent(this,AddressConvert.class);
+                addressConvertIntent.putExtra("ADDRESS",addressBox.getText().toString());
+                startActivityForResult(addressConvertIntent,REQUEST_CODE);
+                break;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode == REQUEST_CODE){
+            if(resultCode == RESULT_OK){
+                double latitude = data.getExtras().getDouble("latitude");
+                double longitude = data.getExtras().getDouble("longitude");
+
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude,longitude),15));
+            }
         }
     }
 }
