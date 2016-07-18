@@ -1,7 +1,9 @@
 package com.example.tj.mapsearch;
 
 
+import android.*;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -9,11 +11,19 @@ import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -23,9 +33,9 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,View.OnClickListener {
 
-    // test
+    // test2
     private final String TAG = "MainActivity";
     private GoogleMap googleMap;
     private MapFragment mapFragment;
@@ -33,6 +43,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private RelativeLayout mainLayout;
     private SensorManager sensorManager;
     private boolean compassEnabled;
+    SlidingPageAnimationListener slidingPageAnimationListener;
+    LinearLayout sliding;
+    Animation translateBottomAnim, translateTopAnim;
+    Button spreadButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +58,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         //googleMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
         // 맵프래그먼트 객체 참조
 
+        spreadButton = (Button)findViewById(R.id.spread);
+        sliding = (LinearLayout)findViewById(R.id.sliding);
+        slidingPageAnimationListener = new SlidingPageAnimationListener(sliding);
+        translateBottomAnim = AnimationUtils.loadAnimation(this,R.anim.translate_bottom);
+        translateTopAnim = AnimationUtils.loadAnimation(this,R.anim.translate_top);
+        translateBottomAnim.setAnimationListener(slidingPageAnimationListener);
+        translateTopAnim.setAnimationListener(slidingPageAnimationListener);
         mainLayout = (RelativeLayout)findViewById(R.id.mainLayout) ;
         //메인 레이아웃 참조
         sensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
@@ -55,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mainLayout.addView(compassView,params);
         compassEnabled = true;
 
+        registerClickListener();
         try {
             MapsInitializer.initialize(this);
         } catch (Exception e) {
@@ -62,28 +84,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    public void registerClickListener(){
+        spreadButton.setOnClickListener(this);
+    }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         this.googleMap = googleMap;
+        /*
         googleMap.addMarker(new MarkerOptions()
                 .position(new LatLng(37.4733326, 126.9400000))
                 .title("Marker"));
-        double homeX = 37.4733326;
-        double homeY = 126.9400000;
+                */
 
-        this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(homeX,homeY),15));
-
-        //MapClass mapClass = new MapClass(googleMap, getApplicationContext());
-        //startLocationService();
+        MapClass mapClass = new MapClass(googleMap, getApplicationContext());
+        startLocationService(mapClass);
+        checkDangerousPermissions();
     }
 
-    private void startLocationService() {
+    private void startLocationService(MapClass mapClass) {
         LocationManager manager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         // 위치 관리자 객체 참조
-        GPSListener gpsListener = new GPSListener();
+        GPSListener gpsListener = new GPSListener(mapClass);
         //위치 관리자가 알려주는 현재 위치는 위치리스너를 통해 받으므로 새로운 리스너(GPS리스너)를 구현하여 처리
 
-        long minTime = 10000;   // 10초에 한번씩 알려주기
+        long minTime = 0;   // 10초에 한번씩 알려주기
         float minDistance = 0;   // 값이 설정 되면 그 거리 만큼 이동 했을 때 위치정보 전달
 
         try{
@@ -96,16 +121,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             // 최근위치 정보 확인해야하기 때문에 위치 제공자 정보를 넘김(getLastKnownLocation)
             // Location 객체는 위도와 경도 값을 가진다.
 
-            double homeX = 37.4733326;
-            double homeY = 126.9400000;
-
-            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(homeX,homeY),15));
-
-            Log.d(TAG, "뜨나요");
             if (lastLocation != null){
                 Double latitude = lastLocation.getLatitude();   // 위도
                 Double longitude = lastLocation.getLongitude(); // 경도
-
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude,longitude),15));
             }
 
         }catch (SecurityException e){
@@ -131,4 +150,92 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     };
 
+    protected void onResume() {
+        super.onResume();
+
+        try {
+            googleMap.setMyLocationEnabled(true);  // 액티비티가 화면에 보일 때 내 위치 활성화
+        }catch (SecurityException e){
+            e.printStackTrace();
+        }
+        // 액티비티가 나타나면 센서매니저에 리스너 등록
+        if (compassEnabled){
+            sensorManager.registerListener(sensorEventListener, sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
+                    SensorManager.SENSOR_DELAY_UI);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        try{
+            googleMap.setMyLocationEnabled(false);  // 중지 되면 표시 비 활성 화
+        }catch (SecurityException e){
+            e.printStackTrace();
+        }
+        //리스너 해제
+        if(compassEnabled){
+            sensorManager.unregisterListener(sensorEventListener);
+        }
+    }
+
+    private void checkDangerousPermissions(){
+
+        String [] permissions = {
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE,
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE };
+
+        int permissionCheck = PackageManager.PERMISSION_GRANTED;
+
+        for(int i=0;i<permissions.length;i++){
+            permissionCheck = ContextCompat.checkSelfPermission(this, permissions[i]);
+            if(permissionCheck == PackageManager.PERMISSION_DENIED){
+                break;
+            }
+        }
+
+        if (permissionCheck == PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Map Service Activated!! \n 잠시 후 현재위치로 이동 합니다. ",Toast.LENGTH_SHORT).show();
+        }else {
+            Toast.makeText(this,"Map Service Fail!!",Toast.LENGTH_SHORT).show();
+            if(ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[0])){
+                Toast.makeText(this,"불가",Toast.LENGTH_SHORT).show();
+            }else
+                ActivityCompat.requestPermissions(this, permissions,1);
+        }
+    }
+
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if(requestCode == 1){
+            for(int i=0;i<permissions.length; i++){
+                if(grantResults[i] == PackageManager.PERMISSION_GRANTED){
+                    Toast.makeText(this, permissions[i]+"승인 ",Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    Toast.makeText(this, permissions[i]+"불허 ",Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onClick(View view) {
+
+        switch (view.getId()) {
+            case R.id.spread:
+                if(slidingPageAnimationListener.isPageOpen()){
+                    sliding.startAnimation(translateTopAnim);
+                    spreadButton.setText("주소 탐색");
+                }else
+                {
+                    sliding.setVisibility(View.VISIBLE);
+                    sliding.startAnimation(translateBottomAnim);
+                    spreadButton.setText("접기");
+                }
+                break;
+        }
+    }
 }

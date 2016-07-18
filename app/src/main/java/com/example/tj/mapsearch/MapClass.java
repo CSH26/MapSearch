@@ -26,7 +26,8 @@ public class MapClass{
         this.googleMap = googleMap;
     }
 
-    public void typeAndCameraSetting(LatLng latLng, int scale){
+    public void typeAndCameraSetting(LatLng latLng){
+        int scale = 15; // 축척 값
         this.googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng,scale));
         // 현재 위치를 지도의 중심으로 표시 LatLng객체와 축척 값을 넘겨줌
         // 축척 값이 클수록 가깝게 보인다.

@@ -13,6 +13,12 @@ import com.google.android.gms.maps.model.LatLng;
 public class GPSListener implements LocationListener {
 
     private final String TAG = "GPSListener";
+    MapClass mapClass;
+
+    public GPSListener(MapClass mapClass) {
+        this.mapClass = mapClass;
+    }
+
     // 위치정보가 전달될때 자동 호출되는 메소드
     @Override
     public void onLocationChanged(Location location) {
@@ -28,10 +34,7 @@ public class GPSListener implements LocationListener {
 
         LatLng curPoint = new LatLng(latitude,longitude); // 현재 위치로 객체 생성
 
-        int scale = 15; // 축척 값
-
-        MapClass mapClass = new MapClass();
-        mapClass.typeAndCameraSetting(curPoint,scale);
+        this.mapClass.typeAndCameraSetting(curPoint);
 
     }
 

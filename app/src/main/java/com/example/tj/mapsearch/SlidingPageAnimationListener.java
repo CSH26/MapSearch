@@ -9,8 +9,12 @@ import android.widget.LinearLayout;
  */
 public class SlidingPageAnimationListener implements Animation.AnimationListener{
 
-    private boolean isPageOpen;
+    private boolean isPageOpen = false;
     private LinearLayout slidingpage;
+
+    public SlidingPageAnimationListener(LinearLayout slidingpage) {
+        this.slidingpage = slidingpage;
+    }
 
     @Override
     public void onAnimationEnd(Animation animation) {
@@ -28,5 +32,13 @@ public class SlidingPageAnimationListener implements Animation.AnimationListener
     }
     @Override
     public void onAnimationRepeat(Animation animation) {
+    }
+
+    public boolean isPageOpen() {
+        return isPageOpen;
+    }
+
+    public void setPageOpen(boolean pageOpen) {
+        isPageOpen = pageOpen;
     }
 }
