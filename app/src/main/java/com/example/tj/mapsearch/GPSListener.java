@@ -13,6 +13,7 @@ import com.google.android.gms.maps.model.LatLng;
 public class GPSListener implements LocationListener {
 
     private final String TAG = "GPSListener";
+    private int ACCESS_COUNT = 0;
     MapClass mapClass;
 
     public GPSListener(MapClass mapClass) {
@@ -34,7 +35,11 @@ public class GPSListener implements LocationListener {
 
         LatLng curPoint = new LatLng(latitude,longitude); // 현재 위치로 객체 생성
 
-        this.mapClass.typeAndCameraSetting(curPoint);
+        if(ACCESS_COUNT == 0){
+            this.mapClass.typeAndCameraSetting(curPoint);
+            ACCESS_COUNT = 1;
+        }
+
 
     }
 

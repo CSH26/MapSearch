@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         sliding = (LinearLayout)findViewById(R.id.sliding);
         slidingPageAnimationListener = new SlidingPageAnimationListener(sliding,MAINACTIVITY_SHOW_SEARCH_BUTTON);
         translateBottomAnim = AnimationUtils.loadAnimation(this,R.anim.translate_bottom);
+        translateBottomAnim.setFillAfter(true);
         translateTopAnim = AnimationUtils.loadAnimation(this,R.anim.translate_top);
         translateBottomAnim.setAnimationListener(slidingPageAnimationListener);
         translateTopAnim.setAnimationListener(slidingPageAnimationListener);
@@ -163,11 +164,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onResume() {
         super.onResume();
 
-        try {
+        /*try {
             googleMap.setMyLocationEnabled(true);  // 액티비티가 화면에 보일 때 내 위치 활성화
         }catch (SecurityException e){
             e.printStackTrace();
-        }
+        }*/
         // 액티비티가 나타나면 센서매니저에 리스너 등록
         if (compassEnabled){
             sensorManager.registerListener(sensorEventListener, sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),

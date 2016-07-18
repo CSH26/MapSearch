@@ -5,11 +5,10 @@
     android:background="@color/list_header_back">
 
     <TextView
-        android:id="@+id/title"
+        android:id="@+id/address"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Play List"
-        android:textSize="40dp"
+        android:textSize="30dp"
         android:textColor="@color/list_header_fontcolor"
         android:layout_weight="4"
         android:paddingLeft="16dp" />

@@ -3,7 +3,7 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
-
+    <color name="colorWhite">#FFFFFF</color>
     <color name="list_item_color">#B2EBF4</color>
     <color name="list_header_fontcolor">#E889BC</color>
     <color name="list_header_back">#DDDDFF</color>

@@ -15,6 +15,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.tj.mapsearch.AddressList.AddressItem;
 import com.example.tj.mapsearch.AddressList.AddressListAdapter;
 
 import java.io.IOException;
@@ -26,14 +27,13 @@ public class AddressConvert extends AppCompatActivity {
     private final static int ADDRESS_CONVERT_ACTIVITY_SHOW_MAP_ANIMATECAMERA_BUTTON = 200;
     private int previousPosition = -1;
     Geocoder gc;
-    TextView contentsText;
+    TextView countView, address;
     Address outAddr;
     int addrCount;
     StringBuffer outAddrStr;
     Button mapAnimateCamera;
     ListView addressList;
-    Animation showAnim;
-    Animation behindAnim;
+    Animation showAnim, behindAnim;
     LinearLayout slidingLayout;
     AddressListAdapter addressListAdapter;
     SlidingPageAnimationListener animationListener;
@@ -43,6 +43,7 @@ public class AddressConvert extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_address_convert);
 
+        address = (TextView)findViewById(R.id.address);
         slidingLayout = (LinearLayout)findViewById(R.id.slidingLayout);
         showAnim = AnimationUtils.loadAnimation(this,R.anim.translate_selected_list);
         behindAnim = AnimationUtils.loadAnimation(this,R.anim.translate_nonselected_list);
@@ -96,7 +97,10 @@ public class AddressConvert extends AppCompatActivity {
         if(extras == null)
             Toast.makeText(getApplicationContext(),"없는 주소이거나 주소명을 잘못 입력하셨습니다.",Toast.LENGTH_LONG).show();
 
-        String search = extras.getString("ADDRESS");
+        String search = extras.getString("ADDRESS").toString();
+        countView = (TextView)header.findViewById(R.id.count);
+        address.setText("["+search+"]검색 결과");
+        countView.setText("주소의 수: "+addressListAdapter.getCount());
         searchLocation(search);
     }
 
@@ -107,18 +111,17 @@ public class AddressConvert extends AppCompatActivity {
             addressList = gc.getFromLocationName(searchStr,1);  // 매치되는 주소 최대 1개만 가져오기
             if(addressList != null)
             {
-                contentsText.append("\n["+searchStr+"] 주소의 수: "+addressList.size()+"\n");
                 for(int i = 0; i<addressList.size(); i++){
+                    String addressName = "";
                     outAddr = addressList.get(i);
                     addrCount = outAddr.getMaxAddressLineIndex()+1;
                     outAddrStr = new StringBuffer();
                     for(int k =0;k<addrCount;k++){
                         outAddrStr.append(outAddr.getAddressLine(k));
+                        addressName = outAddrStr.toString();
                     }
-                    outAddrStr.append("\n 위도 : "+outAddr.getLatitude());
-                    outAddrStr.append("\n 경도 : "+outAddr.getLongitude()+"\n");
+                    addressListAdapter.addItem(new AddressItem(addressName,outAddr.getLatitude(),outAddr.getLongitude()));
 
-                    contentsText.append( "# "+(i+1)+" 번째 : "+outAddrStr.toString() );
                 }
             }
         }catch (IOException e){
