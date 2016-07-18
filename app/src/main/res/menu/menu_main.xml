@@ -1,0 +1,12 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.example.tj.myapplication.MainActivity">
+
+    <item
+        android:id="@+id/makerList"
+        android:orderInCategory="100"
+        android:title="마커 리스트"
+        app:showAsAction="never" />
+
+</menu>

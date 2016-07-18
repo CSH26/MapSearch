@@ -104,11 +104,11 @@ public class AddressConvert extends AppCompatActivity {
         if(search != null){
             searchLocation(search);
             address.setText("["+search+"]검색 결과");
-            countView.setText("결과\n  ["+addressListAdapter.getCount()+"]");
+            countView.setText("결과 ["+addressListAdapter.getCount()+"]");
         }
         else {
             address.setText("["+search+"]검색 결과");
-            countView.setText("결과\n  ["+addressListAdapter.getCount()+"]");
+            countView.setText("결과 ["+addressListAdapter.getCount()+"]");
             Toast.makeText(getApplicationContext(),"없는 주소이거나 주소명을 잘못 입력하셨습니다.",Toast.LENGTH_LONG).show();
         }
     }
