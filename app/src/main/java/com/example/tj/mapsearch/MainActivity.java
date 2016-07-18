@@ -22,6 +22,7 @@ import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -53,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     Animation translateBottomAnim, translateTopAnim;
     Button spreadButton, addressSearch;
     EditText addressBox;
-
+    CheckBox normalBox, satelliteBox;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,6 +66,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         //googleMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
         // 맵프래그먼트 객체 참조
 
+        normalBox = (CheckBox)findViewById(R.id.normal);
+        satelliteBox = (CheckBox)findViewById(R.id.satellite);
         addressBox = (EditText) findViewById(R.id.addressBox);
         spreadButton = (Button)findViewById(R.id.spread);
         addressSearch = (Button)findViewById(R.id.addressSearch);
@@ -97,6 +100,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void registerClickListener(){
         spreadButton.setOnClickListener(this);
         addressSearch.setOnClickListener(this);
+        normalBox.setOnClickListener(this);
+        satelliteBox.setOnClickListener(this);
     }
 
     @Override
@@ -252,6 +257,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 addressConvertIntent.putExtra("ADDRESS",addressBox.getText().toString());
                 startActivityForResult(addressConvertIntent,REQUEST_CODE);
                 break;
+            case R.id.normal:
+                if(normalBox.isChecked()){
+                    googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                    satelliteBox.setChecked(false);
+                }else {
+                    googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                    normalBox.setChecked(false);
+                    satelliteBox.setChecked(true);
+                }
+                break;
+            case R.id.satellite:
+                if(satelliteBox.isChecked()){
+                    googleMap.setMapType(GoogleMap.MAP_TYPE_SATELLITE);
+                    normalBox.setChecked(false);
+                }
+                else {
+                    googleMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                    satelliteBox.setChecked(false);
+                    normalBox.setChecked(true);
+                }
+                break;
         }
     }
 
@@ -261,8 +287,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if(requestCode == REQUEST_CODE){
             if(resultCode == RESULT_OK){
-                double latitude = data.getExtras().getDouble("latitude");
-                double longitude = data.getExtras().getDouble("longitude");
+                double latitude = data.getExtras().getDouble("LATITUDE");
+                double longitude = data.getExtras().getDouble("LONGITUDE");
 
                 googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude,longitude),15));
             }

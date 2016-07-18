@@ -6,36 +6,6 @@
     android:layout_height="match_parent"
     >
 
-    <LinearLayout
-        android:paddingTop="10dp"
-        android:gravity="center"
-        android:id="@+id/buttonlay"
-        android:orientation="horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-       >
-        <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="위성 영상"
-            android:id="@+id/satellite"
-            />
-        <Button
-            android:background="@drawable/selector_button_click"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="지역 검색"
-            android:id="@+id/spread"
-            />
-        <CheckBox
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="일반 지도"
-            android:id="@+id/normal"
-            android:checked="false" />
-
-    </LinearLayout>
-
     <RelativeLayout
         android:layout_marginTop="50dp"
         android:layout_width="match_parent"
@@ -58,7 +28,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="150dp"
         android:visibility="gone"
         android:id="@+id/sliding"
         android:gravity="center"
@@ -68,6 +38,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/addressText"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="20dp"
             android:text="주소명 : "/>
 
         <EditText
@@ -78,10 +50,42 @@
 
         <Button
             android:background="@drawable/selector_button_click"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="60dp"
+            android:layout_height="40dp"
             android:text="검색"
             android:id="@+id/addressSearch" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:paddingTop="10dp"
+        android:gravity="center"
+        android:id="@+id/buttonlay"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        >
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="위성 영상"
+            android:id="@+id/satellite"
+            />
+        <Button
+            android:background="@drawable/selector_button_click"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:text="지역 검색"
+            android:id="@+id/spread"
+            />
+        <CheckBox
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="일반 지도"
+            android:id="@+id/normal"
+            android:checked="true" />
+
     </LinearLayout>
 
 </FrameLayout>

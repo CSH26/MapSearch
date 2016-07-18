@@ -5,6 +5,7 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -24,8 +25,10 @@ import java.util.Locale;
 
 public class AddressConvert extends AppCompatActivity {
 
+    private final String TAG = "AddressConvert";
     private final static int ADDRESS_CONVERT_ACTIVITY_SHOW_MAP_ANIMATECAMERA_BUTTON = 200;
     private int previousPosition = -1;
+    private int forwordPosition = -1;
     Geocoder gc;
     TextView countView, address;
     Address outAddr;
@@ -43,7 +46,6 @@ public class AddressConvert extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_address_convert);
 
-        address = (TextView)findViewById(R.id.address);
         slidingLayout = (LinearLayout)findViewById(R.id.slidingLayout);
         showAnim = AnimationUtils.loadAnimation(this,R.anim.translate_selected_list);
         behindAnim = AnimationUtils.loadAnimation(this,R.anim.translate_nonselected_list);
@@ -70,11 +72,13 @@ public class AddressConvert extends AppCompatActivity {
                         slidingLayout.setVisibility(View.VISIBLE);
                         slidingLayout.startAnimation(showAnim);
                         setPreviousPosition(position);
+                        setForwordPosition(position);
                     }
                 }else {
                     slidingLayout.setVisibility(View.VISIBLE);
                     slidingLayout.startAnimation(showAnim);
                     setPreviousPosition(position);
+                    setForwordPosition(position);
                 }
             }
         });
@@ -84,8 +88,8 @@ public class AddressConvert extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent resultIntent = new Intent();
-                resultIntent.putExtra("LATITUDE",outAddr.getLatitude());
-                resultIntent.putExtra("LONGITUDE",outAddr.getLongitude());
+                resultIntent.putExtra("LATITUDE",addressListAdapter.getItem(0).getLatitude());
+                resultIntent.putExtra("LONGITUDE",addressListAdapter.getItem(0).getLongitude());
 
                 setResult(RESULT_OK,resultIntent);
                 finish();
@@ -93,22 +97,28 @@ public class AddressConvert extends AppCompatActivity {
         });
 
         gc = new Geocoder(this, Locale.KOREA);
-        Bundle extras = getIntent().getExtras();
-        if(extras == null)
-            Toast.makeText(getApplicationContext(),"없는 주소이거나 주소명을 잘못 입력하셨습니다.",Toast.LENGTH_LONG).show();
-
-        String search = extras.getString("ADDRESS").toString();
+        Intent addressConvertIntent = getIntent();
+        String search = addressConvertIntent.getStringExtra("ADDRESS").toString();
         countView = (TextView)header.findViewById(R.id.count);
-        address.setText("["+search+"]검색 결과");
-        countView.setText("주소의 수: "+addressListAdapter.getCount());
-        searchLocation(search);
+        address = (TextView)header.findViewById(R.id.address);
+        if(search != null){
+            searchLocation(search);
+            address.setText("["+search+"]검색 결과");
+            countView.setText("결과\n  ["+addressListAdapter.getCount()+"]");
+        }
+        else {
+            address.setText("["+search+"]검색 결과");
+            countView.setText("결과\n  ["+addressListAdapter.getCount()+"]");
+            Toast.makeText(getApplicationContext(),"없는 주소이거나 주소명을 잘못 입력하셨습니다.",Toast.LENGTH_LONG).show();
+        }
     }
 
     private void searchLocation(String searchStr){
         List<Address> addressList = null;
 
         try{
-            addressList = gc.getFromLocationName(searchStr,1);  // 매치되는 주소 최대 1개만 가져오기
+            addressList = gc.getFromLocationName(searchStr,5);  // 매치되는 주소 최대 1개만 가져오기
+            Log.d(TAG,"리턴된 주소의 수 : "+addressList.size());
             if(addressList != null)
             {
                 for(int i = 0; i<addressList.size(); i++){
@@ -135,5 +145,13 @@ public class AddressConvert extends AppCompatActivity {
 
     public void setPreviousPosition(int previousPosition) {
         this.previousPosition = previousPosition;
+    }
+
+    public int getForwordPosition() {
+        return forwordPosition;
+    }
+
+    public void setForwordPosition(int forwordPosition) {
+        this.forwordPosition = forwordPosition;
     }
 }
