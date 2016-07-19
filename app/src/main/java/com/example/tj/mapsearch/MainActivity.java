@@ -1,11 +1,10 @@
 package com.example.tj.mapsearch;
 
 
-import android.*;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -31,7 +30,6 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.tj.mapsearch.Database.DatabaseOpenHelper;
@@ -42,19 +40,16 @@ import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.MarkerOptions;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,View.OnClickListener {
 
     // test2
     private final static int MAINACTIVITY_SHOW_SEARCH_BUTTON = 100;
-    private final static int REQUEST_CODE = 2000;
+    private final static int REQUEST_CODE_ADDRESS_CONVERT_ACTIVITY = 2000;
+    private final static int REQUEST_CODE_MAKER_LIST_ACTIVITY = 3000;
     private final static String TAG = "MainActivity";
     private final static String DATABASE_NAME = "maker.db";
+    private final static String TABLE_NAME = "makerlist";
     private final static int DATABASE_VERSION = 1;
     private GoogleMap googleMap;
     private MapFragment mapFragment;
@@ -128,15 +123,25 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         this.googleMap = googleMap;
-        /*
-        googleMap.addMarker(new MarkerOptions()
-                .position(new LatLng(37.4733326, 126.9400000))
-                .title("Marker"));
-                */
-        alertDialogClickListener = new AlertDialogClickListener(getApplicationContext(),googleMap,databaseOpenHelper);
+
+        try {
+            if (ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG,"퍼미션이 허용되지않았으므로 내 위치를 표시할 수 없습니다.");
+                return;
+            }
+            else {
+                Log.d(TAG,"퍼미션이 허용. 내 위치를 표시합니다.");
+                this.googleMap.setMyLocationEnabled(true);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        alertDialogClickListener = new AlertDialogClickListener(getApplicationContext(),googleMap,databaseOpenHelper, dialogView);
         MapClass mapClass = new MapClass(googleMap, getApplicationContext());
         startLocationService(mapClass);
         checkDangerousPermissions();
+        drawMaker();
     }
 
     private void startLocationService(MapClass mapClass) {
@@ -189,13 +194,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     protected void onResume() {
         super.onResume();
-
-        /*try {
-            googleMap.setMyLocationEnabled(true);  // 액티비티가 화면에 보일 때 내 위치 활성화
-        }catch (SecurityException e){
-            e.printStackTrace();
-        }*/
         // 액티비티가 나타나면 센서매니저에 리스너 등록
+        if(googleMap != null){
+            Log.d(TAG," onResume called! ");
+            drawMaker();
+        }
         if (compassEnabled){
             sensorManager.registerListener(sensorEventListener, sensorManager.getDefaultSensor(Sensor.TYPE_ORIENTATION),
                     SensorManager.SENSOR_DELAY_UI);
@@ -206,11 +209,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onPause() {
         super.onPause();
 
-        try{
-            googleMap.setMyLocationEnabled(false);  // 중지 되면 표시 비 활성 화
-        }catch (SecurityException e){
-            e.printStackTrace();
-        }
         //리스너 해제
         if(compassEnabled){
             sensorManager.unregisterListener(sensorEventListener);
@@ -270,13 +268,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 {
                     sliding.setVisibility(View.VISIBLE);
                     sliding.startAnimation(translateBottomAnim);
+                    addressBox.setText("");
                     spreadButton.setText("접기");
                 }
                 break;
             case R.id.addressSearch:
                 Intent addressConvertIntent = new Intent(this,AddressConvert.class);
                 addressConvertIntent.putExtra("ADDRESS",addressBox.getText().toString());
-                startActivityForResult(addressConvertIntent,REQUEST_CODE);
+                startActivityForResult(addressConvertIntent,REQUEST_CODE_ADDRESS_CONVERT_ACTIVITY);
                 break;
             case R.id.normal:
                 if(normalBox.isChecked()){
@@ -302,11 +301,31 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
     }
 
+    public void drawMaker(){
+        SQLiteDatabase sqLiteDatabase = databaseOpenHelper.getSqLiteDatabase();
+
+        String SELECT_RECORD_SQL = "select * from "+TABLE_NAME+";";
+        Cursor cursor = sqLiteDatabase.rawQuery(SELECT_RECORD_SQL,null);
+
+        Log.d(TAG," 마커 개수 : "+cursor.getCount());
+        if(cursor.getCount() == 0){
+            Log.d(TAG," 등록된 마커가 없습니다. ");
+        }else {
+            cursor.moveToFirst();
+            alertDialogClickListener.addMakers(cursor.getString(1),Double.parseDouble(cursor.getString(2)),Double.parseDouble(cursor.getString(3)));
+            while (cursor.moveToNext()){
+                alertDialogClickListener.addMakers(cursor.getString(1),Double.parseDouble(cursor.getString(2)),Double.parseDouble(cursor.getString(3)));
+            }
+        }
+
+        cursor.close();
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if(requestCode == REQUEST_CODE){
+        if(requestCode == REQUEST_CODE_ADDRESS_CONVERT_ACTIVITY){
             if(resultCode == RESULT_OK){
                 String addressName = data.getExtras().getString("ADDRESS_NAME");
                 double latitude = data.getExtras().getDouble("LATITUDE");
@@ -316,6 +335,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 alertDialogClickListener.setPlaceInfomation(addressName,latitude,longitude);
                 createAlertDialog();
                 aBuilder.show();
+            }
+        }else if(requestCode == REQUEST_CODE_MAKER_LIST_ACTIVITY){
+            if(resultCode == RESULT_OK){
+                double latitude = data.getExtras().getDouble("LATITUDE");
+                double longitude = data.getExtras().getDouble("LONGITUDE");
+                googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude,longitude),15));
             }
         }
     }
@@ -333,7 +358,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         switch (item.getItemId()) {
             case R.id.makerList:
                 Intent makerListActivitytIntent = new Intent(this,MakerListActivity.class);
-                startActivityForResult(makerListActivitytIntent,REQUEST_CODE);
+                startActivityForResult(makerListActivitytIntent,REQUEST_CODE_MAKER_LIST_ACTIVITY);
                 break;
         }
 
@@ -342,6 +367,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void createAlertDialog(){
         aBuilder.setTitle("Maker Insert");
+        aBuilder.setIcon(R.drawable.smallstar);
         aBuilder.setView(dialogView.getDialogView());
         aBuilder.setPositiveButton("예", alertDialogClickListener);
         aBuilder.setNegativeButton("아니오", alertDialogClickListener);

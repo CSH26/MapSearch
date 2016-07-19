@@ -48,12 +48,13 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
     }
 
     public void createTable(){
+        /*
         try {
             String DROP_SQL = "drop table if exists "+TABLE_NAME;
             sqLiteDatabase.execSQL(DROP_SQL);
         }catch (Exception e){
             Log.d(TAG,"EXCEPTION IN DROP_SQL.",e);
-        }
+        }*/
 
         String CREATE_SQL = "create table "+TABLE_NAME+"("
                 +"_id integer PRIMARY KEY autoincrement, "

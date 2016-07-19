@@ -40,6 +40,7 @@ public class AddressConvert extends AppCompatActivity {
     LinearLayout slidingLayout;
     AddressListAdapter addressListAdapter;
     SlidingPageAnimationListener animationListener;
+    double lat, longi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,7 +103,8 @@ public class AddressConvert extends AppCompatActivity {
         countView = (TextView)header.findViewById(R.id.count);
         address = (TextView)header.findViewById(R.id.address);
         if(search != null){
-            searchLocation(search);
+            findLatlng(search);
+            searchLocation();
             address.setText("["+search+"]검색 결과");
             countView.setText("결과 ["+addressListAdapter.getCount()+"]");
         }
@@ -113,11 +115,61 @@ public class AddressConvert extends AppCompatActivity {
         }
     }
 
+    public void findLatlng(String searchStr){
+        List<Address> addressList = null;
+
+        try{
+            addressList = gc.getFromLocationName(searchStr,1);  // 매치되는 주소 최대 1개만 가져오기
+            if(addressList != null)
+            {
+                for(int i = 0; i<addressList.size(); i++){
+                    String addressName = "";
+                    outAddr = addressList.get(i);
+                    addrCount = outAddr.getMaxAddressLineIndex()+1;
+                    outAddrStr = new StringBuffer();
+                    for(int k =0;k<addrCount;k++){
+                        outAddrStr.append(outAddr.getAddressLine(k));
+                        addressName = outAddrStr.toString();
+                    }
+                    lat = outAddr.getLatitude();
+                    longi = outAddr.getLongitude();
+                }
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
     private void searchLocation(String searchStr){
         List<Address> addressList = null;
 
         try{
             addressList = gc.getFromLocationName(searchStr,5);  // 매치되는 주소 최대 1개만 가져오기
+            if(addressList != null)
+            {
+                for(int i = 0; i<addressList.size(); i++){
+                    String addressName = "";
+                    outAddr = addressList.get(i);
+                    addrCount = outAddr.getMaxAddressLineIndex()+1;
+                    outAddrStr = new StringBuffer();
+                    for(int k =0;k<addrCount;k++){
+                        outAddrStr.append(outAddr.getAddressLine(k));
+                        addressName = outAddrStr.toString();
+                    }
+                    addressListAdapter.addItem(new AddressItem(addressName,outAddr.getLatitude(),outAddr.getLongitude()));
+
+                }
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    private void searchLocation(){
+        List<Address> addressList = null;
+
+        try{
+            addressList = gc.getFromLocation(lat,longi,10);  // 매치되는 주소 최대 10개만 가져오기
             Log.d(TAG,"리턴된 주소의 수 : "+addressList.size());
             if(addressList != null)
             {
