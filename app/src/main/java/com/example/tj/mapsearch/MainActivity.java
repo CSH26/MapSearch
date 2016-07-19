@@ -5,6 +5,8 @@ import android.*;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
+import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -32,6 +34,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.tj.mapsearch.Database.DatabaseOpenHelper;
+import com.example.tj.mapsearch.MakerList.MakerListActivity;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -40,12 +44,18 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,View.OnClickListener {
 
     // test2
     private final static int MAINACTIVITY_SHOW_SEARCH_BUTTON = 100;
     private final static int REQUEST_CODE = 2000;
-    private final String TAG = "MainActivity";
+    private final static String TAG = "MainActivity";
+    private final static String DATABASE_NAME = "maker.db";
+    private final static int DATABASE_VERSION = 1;
     private GoogleMap googleMap;
     private MapFragment mapFragment;
     private CompassView compassView;
@@ -61,16 +71,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     AlertDialogClickListener alertDialogClickListener;
     AlertDialog.Builder aBuilder;
     DialogView dialogView;
+    DatabaseOpenHelper databaseOpenHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        databaseOpenHelper = new DatabaseOpenHelper(getApplicationContext(),DATABASE_NAME,MODE_WORLD_WRITEABLE,DATABASE_VERSION);
+        databaseOpenHelper.createTable();
         mapFragment = (MapFragment) getFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        //googleMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
-        // 맵프래그먼트 객체 참조
+
         dialogView = new DialogView(this);
         aBuilder = new AlertDialog.Builder(MainActivity.this); // save 작동시에 띄워줄 dialog창
 
@@ -98,6 +110,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         compassEnabled = true;
 
         registerClickListener();
+
         try {
             MapsInitializer.initialize(this);
         } catch (Exception e) {
@@ -120,7 +133,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .position(new LatLng(37.4733326, 126.9400000))
                 .title("Marker"));
                 */
-        alertDialogClickListener = new AlertDialogClickListener(getApplicationContext(),googleMap);
+        alertDialogClickListener = new AlertDialogClickListener(getApplicationContext(),googleMap,databaseOpenHelper);
         MapClass mapClass = new MapClass(googleMap, getApplicationContext());
         startLocationService(mapClass);
         checkDangerousPermissions();
@@ -319,14 +332,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         switch (item.getItemId()) {
             case R.id.makerList:
-                if (slidingPageAnimationListener.isPageOpen()) {
-                    sliding.startAnimation(translateTopAnim);
-                    spreadButton.setText("주소 탐색");
-                } else {
-                    sliding.setVisibility(View.VISIBLE);
-                    sliding.startAnimation(translateBottomAnim);
-                    spreadButton.setText("접기");
-                }
+                Intent makerListActivitytIntent = new Intent(this,MakerListActivity.class);
+                startActivityForResult(makerListActivitytIntent,REQUEST_CODE);
                 break;
         }
 
@@ -339,4 +346,5 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         aBuilder.setPositiveButton("예", alertDialogClickListener);
         aBuilder.setNegativeButton("아니오", alertDialogClickListener);
     }
+
 }
