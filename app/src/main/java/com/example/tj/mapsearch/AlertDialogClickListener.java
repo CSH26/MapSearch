@@ -7,10 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
-import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.example.tj.mapsearch.Database.AddressBean;
+import com.example.tj.mapsearch.AddressList.AddressItem;
 import com.example.tj.mapsearch.Database.DatabaseOpenHelper;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
@@ -24,7 +23,7 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
     private final static String TAG = "AlertDialogClickListener";
     GoogleMap googleMap;
     Context context;
-    AddressBean adressBean;
+    AddressItem addressItem;
     SQLiteDatabase sqLiteDatabase;
     DatabaseOpenHelper databaseOpenHelper;
     boolean isRecordInserted;
@@ -47,10 +46,10 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
                 isRecordInserted = insertingRecords();
 
                 if(isRecordInserted){
-                    Toast.makeText(context,adressBean.getAddressName()+"이(가) 마커리스트에 성공적으로 추가되었습니다.",Toast.LENGTH_SHORT);
+                    Toast.makeText(context,addressItem.getAddressName()+"이(가) 마커리스트에 성공적으로 추가되었습니다.",Toast.LENGTH_SHORT);
                     selectRecord();
                 }else {
-                    Toast.makeText(context,adressBean.getAddressName()+"이(가) 마커리스트에 등록되지 않았습니다.",Toast.LENGTH_SHORT);
+                    Toast.makeText(context,addressItem.getAddressName()+"이(가) 마커리스트에 등록되지 않았습니다.",Toast.LENGTH_SHORT);
                 }
                 break;
             case -2:  // 아니오
@@ -60,15 +59,16 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
     }
 
     public void setPlaceInfomation(String addressName, double latitude, double longitude){
-        adressBean = new AddressBean(addressName,latitude,longitude);
+        addressItem = new AddressItem(addressName,latitude,longitude);
+        //adressBean = new AddressBean(addressName,latitude,longitude);
     }
 
     public void addMakers(){
         MarkerOptions maker = new MarkerOptions();
         // 아이콘을 이용해 원하는 위치를 포인트로 쉽게 표현하는 마커 설정
 
-        maker.position(new LatLng(adressBean.getLatitude(), adressBean.getLongitude()));
-        maker.title(" 장소명 : "+adressBean.getAddressName());
+        maker.position(new LatLng(addressItem.getLatitude(), addressItem.getLongitude()));
+        maker.title(" 장소명 : "+addressItem.getAddressName());
         maker.draggable(true);
         Bitmap srcImg = BitmapFactory.decodeResource(context.getResources(),R.drawable.smallstar);
 
@@ -81,11 +81,9 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
         Log.d(TAG,"테이블 네임은 : "+databaseOpenHelper.getTableName());
         String INSERT_RECORD_SQL = "insert into "+databaseOpenHelper.getTableName()+"("
                 +"address_name, latitude, longitude) values ("
-                +"\""+adressBean.getAddressName()+"\", "
-                +"\""+Double.toString(adressBean.getLatitude())+"\", "
-                +"\""+Double.toString(adressBean.getLongitude())+"\");";
-        Log.d(TAG,"구문확인->"+INSERT_RECORD_SQL);
-
+                +"\""+addressItem.getAddressName()+"\", "
+                +"\""+Double.toString(addressItem.getLatitude())+"\", "
+                +"\""+Double.toString(addressItem.getLongitude())+"\");";
 
         try {
             sqLiteDatabase.execSQL(INSERT_RECORD_SQL);
