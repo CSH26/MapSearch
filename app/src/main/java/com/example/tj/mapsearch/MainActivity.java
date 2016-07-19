@@ -15,6 +15,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -57,6 +58,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     Button spreadButton, addressSearch;
     EditText addressBox;
     CheckBox normalBox, satelliteBox;
+    AlertDialogClickListener alertDialogClickListener;
+    AlertDialog.Builder aBuilder;
+    DialogView dialogView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +71,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         mapFragment.getMapAsync(this);
         //googleMap = ((SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map)).getMap();
         // 맵프래그먼트 객체 참조
+        dialogView = new DialogView(this);
+        aBuilder = new AlertDialog.Builder(MainActivity.this); // save 작동시에 띄워줄 dialog창
 
         normalBox = (CheckBox)findViewById(R.id.normal);
         satelliteBox = (CheckBox)findViewById(R.id.satellite);
@@ -114,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .position(new LatLng(37.4733326, 126.9400000))
                 .title("Marker"));
                 */
-
+        alertDialogClickListener = new AlertDialogClickListener(getApplicationContext(),googleMap);
         MapClass mapClass = new MapClass(googleMap, getApplicationContext());
         startLocationService(mapClass);
         checkDangerousPermissions();
@@ -289,10 +295,14 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if(requestCode == REQUEST_CODE){
             if(resultCode == RESULT_OK){
+                String addressName = data.getExtras().getString("ADDRESS_NAME");
                 double latitude = data.getExtras().getDouble("LATITUDE");
                 double longitude = data.getExtras().getDouble("LONGITUDE");
 
                 googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude,longitude),15));
+                alertDialogClickListener.setPlaceInfomation(addressName,latitude,longitude);
+                createAlertDialog();
+                aBuilder.show();
             }
         }
     }
@@ -321,5 +331,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void createAlertDialog(){
+        aBuilder.setTitle("Maker Insert");
+        aBuilder.setView(dialogView.getDialogView());
+        aBuilder.setPositiveButton("예", alertDialogClickListener);
+        aBuilder.setNegativeButton("아니오", alertDialogClickListener);
     }
 }

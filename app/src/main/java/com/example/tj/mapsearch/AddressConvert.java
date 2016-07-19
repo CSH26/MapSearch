@@ -90,7 +90,7 @@ public class AddressConvert extends AppCompatActivity {
                 Intent resultIntent = new Intent();
                 resultIntent.putExtra("LATITUDE",addressListAdapter.getItem(0).getLatitude());
                 resultIntent.putExtra("LONGITUDE",addressListAdapter.getItem(0).getLongitude());
-
+                resultIntent.putExtra("ADDRESS_NAME",addressListAdapter.getItem(0).getAddressName());
                 setResult(RESULT_OK,resultIntent);
                 finish();
             }
