@@ -4,8 +4,11 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -17,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.tj.mapsearch.AddressList.AddressItem;
+import com.example.tj.mapsearch.AlertDialogClickListener;
 import com.example.tj.mapsearch.Database.DatabaseOpenHelper;
 import com.example.tj.mapsearch.R;
 import com.example.tj.mapsearch.SlidingPageAnimationListener;
@@ -24,6 +28,7 @@ import com.example.tj.mapsearch.SlidingPageAnimationListener;
 public class MakerListActivity extends AppCompatActivity implements View.OnClickListener{
 
     private final String TAG = "MakerListActivity";
+    private final static int MAINACTIVITY_ALERTDIALOG_REQUEST_CODE = 2;
     private final static int MAKER_LIST_ACTIVITY = 300;
     private final static String TABLE_NAME = "makerlist";
     private final static String DATABASE_NAME = "maker.db";
@@ -40,6 +45,10 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
     MakerListAdapter makerListAdapter;
     SQLiteDatabase sqLiteDatabase;
     DatabaseOpenHelper databaseOpenHelper;
+    AlertDialogClickListener alertDialogClickListener;
+    AlertDialog.Builder aBuilder;
+    AddMakerDialogView addMakerDialogView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,7 +56,8 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
         databaseOpenHelper = new DatabaseOpenHelper(getApplicationContext(),DATABASE_NAME,MODE_WORLD_WRITEABLE,DATABASE_VERSION);
         sqLiteDatabase = openOrCreateDatabase(DATABASE_NAME,MODE_WORLD_READABLE,null);
         sqLiteDatabase = databaseOpenHelper.getReadableDatabase();
-
+        aBuilder = new AlertDialog.Builder(MakerListActivity.this); // save 작동시에 띄워줄 dialog창
+        addMakerDialogView = new AddMakerDialogView(this);
         deleteMaker = (Button)findViewById(R.id.deleteMaker);
         deleteMaker.setOnClickListener(this);
         moveMaker = (Button)findViewById(R.id.moveMaker);
@@ -90,6 +100,8 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
                 }
             }
         });
+
+        alertDialogClickListener = new AlertDialogClickListener(getApplicationContext(), addMakerDialogView, MAINACTIVITY_ALERTDIALOG_REQUEST_CODE, makerListAdapter);
 
         makerCount = (TextView)header.findViewById(R.id.makerCount);
         makerCount.setText("마커 수 : "+makerListAdapter.getCount());
@@ -144,7 +156,8 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
                 try {
                     sqLiteDatabase.execSQL(DELETE_RECORD_SQL);
                     Toast.makeText(getApplicationContext(),"선택된 마커가 삭제되었습니다.",Toast.LENGTH_SHORT).show();
-                    makerListView.setAdapter(makerListAdapter);
+                    makerListAdapter.removeItem(getForwordPosition()-1);
+                    makerListAdapter.notifyDataSetChanged();
                 }catch (Exception e){
                     Log.d(TAG,"EXCEPTION IN INSERT_RECORD_SQL.",e);
                 }
@@ -158,5 +171,33 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
                 break;
 
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_addmaker, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+
+        switch (item.getItemId()) {
+            case R.id.addmaker:
+                createAlertDialog();
+                aBuilder.show();
+                break;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+    public void createAlertDialog(){
+        aBuilder.setTitle("Maker Insert");
+        aBuilder.setIcon(R.drawable.smallstar);
+        aBuilder.setView(addMakerDialogView.getDialogView());
+        aBuilder.setMessage("마커를 등록할 주소명을 입력하세요.");
+        aBuilder.setPositiveButton("확인", alertDialogClickListener);
+        aBuilder.setNegativeButton("취소", alertDialogClickListener);
     }
 }

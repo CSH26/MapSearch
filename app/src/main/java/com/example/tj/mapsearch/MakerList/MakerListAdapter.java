@@ -54,4 +54,8 @@ public class MakerListAdapter extends BaseAdapter {
         makerListView.setText(mItems.get(position).getLongitude(),2);
         return makerListView;
     }
+
+    public void removeItem(int position){
+        mItems.remove(position);
+    }
 }

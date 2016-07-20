@@ -139,12 +139,36 @@ public class AddressConvert extends AppCompatActivity {
             e.printStackTrace();
         }
     }
+    public void findLatlng(String searchStr, int size){
+        List<Address> addressList = null;
+        Geocoder gc = new Geocoder(getApplicationContext(),Locale.KOREA);
+        try{
+            addressList = gc.getFromLocationName(searchStr,size);  // 매치되는 주소 최대 1개만 가져오기
+            if(addressList != null)
+            {
+                for(int i = 0; i<addressList.size(); i++){
+                    String addressName = "";
+                    outAddr = addressList.get(i);
+                    addrCount = outAddr.getMaxAddressLineIndex()+1;
+                    outAddrStr = new StringBuffer();
+                    for(int k =0;k<addrCount;k++){
+                        outAddrStr.append(outAddr.getAddressLine(k));
+                        addressName = outAddrStr.toString();
+                    }
+                    lat = outAddr.getLatitude();
+                    longi = outAddr.getLongitude();
+                }
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
 
     private void searchLocation(String searchStr){
         List<Address> addressList = null;
 
         try{
-            addressList = gc.getFromLocationName(searchStr,5);  // 매치되는 주소 최대 1개만 가져오기
+            addressList = gc.getFromLocationName(searchStr,1);  // 매치되는 주소 최대 1개만 가져오기
             if(addressList != null)
             {
                 for(int i = 0; i<addressList.size(); i++){
@@ -205,5 +229,21 @@ public class AddressConvert extends AppCompatActivity {
 
     public void setForwordPosition(int forwordPosition) {
         this.forwordPosition = forwordPosition;
+    }
+
+    public double getLat() {
+        return lat;
+    }
+
+    public void setLat(double lat) {
+        this.lat = lat;
+    }
+
+    public double getLongi() {
+        return longi;
+    }
+
+    public void setLongi(double longi) {
+        this.longi = longi;
     }
 }

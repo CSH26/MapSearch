@@ -43,7 +43,7 @@ import com.google.android.gms.maps.model.LatLng;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,View.OnClickListener {
 
-    // test2
+    private final static int MAINACTIVITY_ALERTDIALOG_REQUEST_CODE = 1;
     private final static int MAINACTIVITY_SHOW_SEARCH_BUTTON = 100;
     private final static int REQUEST_CODE_ADDRESS_CONVERT_ACTIVITY = 2000;
     private final static int REQUEST_CODE_MAKER_LIST_ACTIVITY = 3000;
@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             e.printStackTrace();
         }
 
-        alertDialogClickListener = new AlertDialogClickListener(getApplicationContext(),googleMap,databaseOpenHelper, dialogView);
+        alertDialogClickListener = new AlertDialogClickListener(getApplicationContext(),googleMap,databaseOpenHelper, dialogView, MAINACTIVITY_ALERTDIALOG_REQUEST_CODE);
         MapClass mapClass = new MapClass(googleMap, getApplicationContext());
         startLocationService(mapClass);
         checkDangerousPermissions();
@@ -302,6 +302,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void drawMaker(){
+        googleMap.clear();
         SQLiteDatabase sqLiteDatabase = databaseOpenHelper.getSqLiteDatabase();
 
         String SELECT_RECORD_SQL = "select * from "+TABLE_NAME+";";
@@ -309,7 +310,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         Log.d(TAG," 마커 개수 : "+cursor.getCount());
         if(cursor.getCount() == 0){
-            Log.d(TAG," 등록된 마커가 없습니다. ");
+
         }else {
             cursor.moveToFirst();
             alertDialogClickListener.addMakers(cursor.getString(1),Double.parseDouble(cursor.getString(2)),Double.parseDouble(cursor.getString(3)));

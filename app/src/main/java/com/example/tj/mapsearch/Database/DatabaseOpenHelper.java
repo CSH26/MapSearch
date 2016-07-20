@@ -1,6 +1,7 @@
 package com.example.tj.mapsearch.Database;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
@@ -30,8 +31,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        Log.d(TAG,"try 진입전");
-        // 오류나면 new 생성
+
         try {
             this.sqLiteDatabase = SQLiteDatabase.openOrCreateDatabase(databaseName, null, null);
             databaseCreated = true;
@@ -48,13 +48,15 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
     }
 
     public void createTable(){
+
+        checkTableIsCreated(sqLiteDatabase);
         /*
         try {
             String DROP_SQL = "drop table if exists "+TABLE_NAME;
             sqLiteDatabase.execSQL(DROP_SQL);
         }catch (Exception e){
             Log.d(TAG,"EXCEPTION IN DROP_SQL.",e);
-        }*/
+        }
 
         String CREATE_SQL = "create table "+TABLE_NAME+"("
                 +"_id integer PRIMARY KEY autoincrement, "
@@ -66,7 +68,7 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
             sqLiteDatabase.execSQL(CREATE_SQL);
         }catch (Exception e){
             Log.d(TAG,"EXCEPTION IN CREATE_SQL.",e);
-        }
+        }*/
     }
 
     public SQLiteDatabase getSqLiteDatabase() {
@@ -84,5 +86,27 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
 
     public void setSqLiteDatabase(SQLiteDatabase sqLiteDatabase) {
         this.sqLiteDatabase = sqLiteDatabase;
+    }
+
+    private void checkTableIsCreated(SQLiteDatabase db){
+        String CREATE_SQL = "create table "+TABLE_NAME+"("
+                +"_id integer PRIMARY KEY autoincrement, "
+                +"address_name text, "
+                +"latitude text, "
+                +"longitude text);";
+
+        Cursor c=db.query("sqlite_master", new String[]{"count(*)"}, "name=?",
+                new String[]{"makerlist"}, null, null, null);  //시스템 카탈로그에서 커서로 테이블 이름을 확인
+        Integer cnt=0;
+        c.moveToFirst();
+        while(c.isAfterLast()==false){
+            cnt=c.getInt(0);
+            c.moveToNext();
+        }
+        c.close();
+
+        if(cnt==0){
+            db.execSQL(CREATE_SQL); //DB에 테이블이 없으면 테이블 생성 쿼리 실행
+        }
     }
 }
