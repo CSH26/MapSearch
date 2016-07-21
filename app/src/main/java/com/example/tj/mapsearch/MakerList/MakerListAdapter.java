@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
 import com.example.tj.mapsearch.AddressList.AddressItem;
+import com.google.android.gms.maps.GoogleMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ public class MakerListAdapter extends BaseAdapter {
     public static final String TAG = "MakerListAdapter";
     private Context context;
     public List<AddressItem> mItems = new ArrayList<AddressItem>();
+    GoogleMap googleMap;
 
     public MakerListAdapter(Context context) {
         this.context = context;
@@ -57,5 +59,13 @@ public class MakerListAdapter extends BaseAdapter {
 
     public void removeItem(int position){
         mItems.remove(position);
+    }
+
+    public GoogleMap getGoogleMap() {
+        return googleMap;
+    }
+
+    public void setGoogleMap(GoogleMap googleMap) {
+        this.googleMap = googleMap;
     }
 }

@@ -138,6 +138,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         alertDialogClickListener = new AlertDialogClickListener(getApplicationContext(),googleMap,databaseOpenHelper, dialogView, MAINACTIVITY_ALERTDIALOG_REQUEST_CODE);
+        GoogleMapLongClickListener googleMapLongClickListener = new GoogleMapLongClickListener(getApplicationContext(), alertDialogClickListener, aBuilder, dialogView);
+        this.googleMap.setOnMapLongClickListener(googleMapLongClickListener);
         MapClass mapClass = new MapClass(googleMap, getApplicationContext());
         startLocationService(mapClass);
         checkDangerousPermissions();
@@ -334,6 +336,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                 googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude,longitude),15));
                 alertDialogClickListener.setPlaceInfomation(addressName,latitude,longitude);
+                alertDialogClickListener.setALERTDIALOG_REQUEST_CODE(MAINACTIVITY_ALERTDIALOG_REQUEST_CODE);
                 createAlertDialog();
                 aBuilder.show();
             }
@@ -359,6 +362,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         switch (item.getItemId()) {
             case R.id.makerList:
                 Intent makerListActivitytIntent = new Intent(this,MakerListActivity.class);
+                GoogleMapData googleMapData = new GoogleMapData(this.googleMap);
+
+                makerListActivitytIntent.putExtra("GOOGLE_MAP",googleMapData);
                 startActivityForResult(makerListActivitytIntent,REQUEST_CODE_MAKER_LIST_ACTIVITY);
                 break;
         }

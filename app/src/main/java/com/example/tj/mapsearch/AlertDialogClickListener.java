@@ -2,6 +2,7 @@ package com.example.tj.mapsearch;
 
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -33,6 +34,10 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
 
     private final static String TAG = "AlertDialogClickListener";
     private int ALERTDIALOG_REQUEST_CODE;
+    private int ALERTDIALOG_REQUEST_CODE_ADDRESSCONVERT_ACTIVITY = 1;
+    private int ALERTDIALOG_REQUEST_CODE_MAKERLIST_ACTIVITY = 2;
+    private int ALERTDIALOG_REQUEST_CODE_ON_MAP_LONGCLICK_MAIN_ACTIVITY = 3;
+
     GoogleMap googleMap;
     Context context;
     AddressItem addressItem;
@@ -47,6 +52,7 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
     double lat, longi;
     int addrCount;
     StringBuffer outAddrStr;
+    String tempAddressName;
 
     public AlertDialogClickListener(Context context, GoogleMap googleMap, DatabaseOpenHelper databaseOpenHelper, DialogView dialogView, int ALERTDIALOG_REQUEST_CODE) {
         this.context = context;
@@ -58,13 +64,16 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
         this.ALERTDIALOG_REQUEST_CODE = ALERTDIALOG_REQUEST_CODE;
     }
 
-    public AlertDialogClickListener(Context context, AddMakerDialogView addMakerDialogView, int ALERTDIALOG_REQUEST_CODE,  MakerListAdapter makerListAdapter) {
+    public AlertDialogClickListener(Context context, AddMakerDialogView addMakerDialogView, int ALERTDIALOG_REQUEST_CODE,  MakerListAdapter makerListAdapter, DatabaseOpenHelper databaseOpenHelper) {
         this.context = context;
         isRecordInserted = false;
         this.addMakerDialogView = addMakerDialogView;
         this.ALERTDIALOG_REQUEST_CODE = ALERTDIALOG_REQUEST_CODE;
         this.makerListAdapter = makerListAdapter;
         gc = new Geocoder(context, Locale.KOREA);
+        this.databaseOpenHelper = databaseOpenHelper;
+        this.sqLiteDatabase = this.databaseOpenHelper.getSqLiteDatabase();
+        this.googleMap = makerListAdapter.getGoogleMap();
     }
 
     @Override
@@ -72,7 +81,7 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
 
         switch (which){
             case -1: // 예
-                if(ALERTDIALOG_REQUEST_CODE == 1){
+                if(ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_ADDRESSCONVERT_ACTIVITY){
                     addMakers();
                     isRecordInserted = insertingRecords();
                     if(isRecordInserted){
@@ -89,9 +98,8 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
                         }
                     }
                     break;
-                }else if(ALERTDIALOG_REQUEST_CODE == 2){
+                }else if(ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_MAKERLIST_ACTIVITY){
                     findLatlng(addMakerDialogView.getAddMakerDialogViewText());
-                    Log.d(TAG,"AddressConvert가 제대로 생성되었는가 ? Lat : "+getLat()+", Longi : "+getLongi());
                     setPlaceInfomation(addMakerDialogView.getAddMakerDialogViewText(),getLat(),getLongi());
                     addMakers();
                     isRecordInserted = insertingRecords();
@@ -112,6 +120,28 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
                         }
                     }
                     break;
+                }else if(ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_ON_MAP_LONGCLICK_MAIN_ACTIVITY){
+                    gc = new Geocoder(context, Locale.KOREA);
+                    searchLocation();
+                    setPlaceInfomation(getTempAddressName(),getLat(),getLongi());
+                    addMakers(getTempAddressName(),getLat(),getLongi());
+                    isRecordInserted = insertingRecords();
+
+                    if(isRecordInserted){
+                        Toast.makeText(context,addressItem.getAddressName()+"이(가) 마커리스트에 성공적으로 추가되었습니다.",Toast.LENGTH_SHORT);
+                        isRecordInserted = false;
+                    }else {
+                        Toast.makeText(context,addressItem.getAddressName()+"이(가) 마커리스트에 등록되지 않았습니다.",Toast.LENGTH_SHORT);
+                    }
+                    if (dialogView != null) // 중복창 띄우기
+                    {
+                        ViewGroup parent = (ViewGroup) dialogView.getParent();
+                        if (parent != null) {
+                            parent.removeView(dialogView);
+                        }
+                    }
+                    break;
+
                 }
             case -2:  // 아니오
                 if (dialogView != null)
@@ -160,27 +190,15 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
     }
 
     public boolean insertingRecords(){
+        Log.d(TAG," 주소명 "+addressItem.getAddressName());
+        Log.d(TAG," 위도 "+Double.toString(addressItem.getLatitude()));
+        Log.d(TAG," 경도 "+Double.toString(addressItem.getLongitude()));
+
         String INSERT_RECORD_SQL = "insert into "+databaseOpenHelper.getTableName()+"("
                 +"address_name, latitude, longitude) values ("
                 +"\""+addressItem.getAddressName()+"\", "
                 +"\""+Double.toString(addressItem.getLatitude())+"\", "
                 +"\""+Double.toString(addressItem.getLongitude())+"\");";
-
-        try {
-            sqLiteDatabase.execSQL(INSERT_RECORD_SQL);
-            return true;
-        }catch (Exception e){
-            Log.d(TAG,"EXCEPTION IN INSERT_RECORD_SQL.",e);
-            return false;
-        }
-    }
-
-    public boolean insertingRecords(String addressName, double latitude, double longitude){
-        String INSERT_RECORD_SQL = "insert into "+databaseOpenHelper.getTableName()+"("
-                +"address_name, latitude, longitude) values ("
-                +"\""+addressName+"\", "
-                +"\""+Double.toString(latitude)+"\", "
-                +"\""+Double.toString(longitude)+"\");";
 
         try {
             sqLiteDatabase.execSQL(INSERT_RECORD_SQL);
@@ -199,16 +217,38 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
             if(addressList != null)
             {
                 for(int i = 0; i<addressList.size(); i++){
-                    String addressName = "";
+                    tempAddressName = "";
                     outAddr = addressList.get(i);
                     addrCount = outAddr.getMaxAddressLineIndex()+1;
                     outAddrStr = new StringBuffer();
                     for(int k =0;k<addrCount;k++){
                         outAddrStr.append(outAddr.getAddressLine(k));
-                        addressName = outAddrStr.toString();
+                        tempAddressName = outAddrStr.toString();
                     }
-                    setLat(outAddr.getLatitude());
-                    setLongi(outAddr.getLongitude());
+                }
+            }
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    private void searchLocation(){
+        List<Address> addressList = null;
+
+        try{
+            addressList = gc.getFromLocation(getLat(),getLongi(),1);  // 매치되는 주소 최대 10개만 가져오기
+
+            if(addressList != null)
+            {
+                for(int i = 0; i<addressList.size(); i++){
+                    String tempAddressName = "";
+                    outAddr = addressList.get(i);
+                    addrCount = outAddr.getMaxAddressLineIndex()+1;
+                    outAddrStr = new StringBuffer();
+                    for(int k =0;k<addrCount;k++) {
+                        outAddrStr.append(outAddr.getAddressLine(k));
+                        setTempAddressName(outAddrStr.toString());
+                    }
                 }
             }
         }catch (IOException e){
@@ -230,5 +270,21 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
 
     public void setLongi(double longi) {
         this.longi = longi;
+    }
+
+    public int getALERTDIALOG_REQUEST_CODE() {
+        return ALERTDIALOG_REQUEST_CODE;
+    }
+
+    public void setALERTDIALOG_REQUEST_CODE(int ALERTDIALOG_REQUEST_CODE) {
+        this.ALERTDIALOG_REQUEST_CODE = ALERTDIALOG_REQUEST_CODE;
+    }
+
+    public String getTempAddressName() {
+        return tempAddressName;
+    }
+
+    public void setTempAddressName(String tempAddressName) {
+        this.tempAddressName = tempAddressName;
     }
 }

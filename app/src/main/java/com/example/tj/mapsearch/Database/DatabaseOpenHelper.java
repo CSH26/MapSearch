@@ -6,6 +6,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
+import com.google.android.gms.maps.GoogleMap;
+
 /**
  * Created by TJ on 2016-07-19.
  */
@@ -109,4 +111,5 @@ public class DatabaseOpenHelper extends SQLiteOpenHelper {
             db.execSQL(CREATE_SQL); //DB에 테이블이 없으면 테이블 생성 쿼리 실행
         }
     }
+
 }

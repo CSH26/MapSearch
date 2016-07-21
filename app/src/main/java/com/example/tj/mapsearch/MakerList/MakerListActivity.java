@@ -22,8 +22,10 @@ import android.widget.Toast;
 import com.example.tj.mapsearch.AddressList.AddressItem;
 import com.example.tj.mapsearch.AlertDialogClickListener;
 import com.example.tj.mapsearch.Database.DatabaseOpenHelper;
+import com.example.tj.mapsearch.GoogleMapData;
 import com.example.tj.mapsearch.R;
 import com.example.tj.mapsearch.SlidingPageAnimationListener;
+import com.google.android.gms.maps.GoogleMap;
 
 public class MakerListActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -48,6 +50,7 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
     AlertDialogClickListener alertDialogClickListener;
     AlertDialog.Builder aBuilder;
     AddMakerDialogView addMakerDialogView;
+    GoogleMapData googleMapData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +73,9 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
         showAnim.setAnimationListener(animationListener);
         behindAnim.setAnimationListener(animationListener);
         makerListView = (ListView)findViewById(R.id.makerListView);
+
+        Intent intent = getIntent();
+        googleMapData = intent.getParcelableExtra("GOOGLE_MAP");
 
         final View header = getLayoutInflater().inflate(R.layout.makerlistview_header,null,false);
 
@@ -101,7 +107,8 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
             }
         });
 
-        alertDialogClickListener = new AlertDialogClickListener(getApplicationContext(), addMakerDialogView, MAINACTIVITY_ALERTDIALOG_REQUEST_CODE, makerListAdapter);
+        makerListAdapter.setGoogleMap(googleMapData.getGoogleMap());
+        alertDialogClickListener = new AlertDialogClickListener(getApplicationContext(), addMakerDialogView, MAINACTIVITY_ALERTDIALOG_REQUEST_CODE, makerListAdapter, databaseOpenHelper);
 
         makerCount = (TextView)header.findViewById(R.id.makerCount);
         makerCount.setText("마커 수 : "+makerListAdapter.getCount());
