@@ -25,7 +25,6 @@ import com.example.tj.mapsearch.Database.DatabaseOpenHelper;
 import com.example.tj.mapsearch.GoogleMapData;
 import com.example.tj.mapsearch.R;
 import com.example.tj.mapsearch.SlidingPageAnimationListener;
-import com.google.android.gms.maps.GoogleMap;
 
 public class MakerListActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -164,9 +163,11 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
                     sqLiteDatabase.execSQL(DELETE_RECORD_SQL);
                     Toast.makeText(getApplicationContext(),"선택된 마커가 삭제되었습니다.",Toast.LENGTH_SHORT).show();
                     makerListAdapter.removeItem(getForwordPosition()-1);
+                    makerCount.setText("마커 수 : "+makerListAdapter.getCount());
+                    slidingLayout.startAnimation(behindAnim);
                     makerListAdapter.notifyDataSetChanged();
                 }catch (Exception e){
-                    Log.d(TAG,"EXCEPTION IN INSERT_RECORD_SQL.",e);
+                    Log.d(TAG,"EXCEPTION IN DELETE_RECORD_SQL.",e);
                 }
                 break;
             case R.id.moveMaker:
@@ -206,5 +207,18 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
         aBuilder.setMessage("마커를 등록할 주소명을 입력하세요.");
         aBuilder.setPositiveButton("확인", alertDialogClickListener);
         aBuilder.setNegativeButton("취소", alertDialogClickListener);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG,"onResume call!.");
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        makerCount.setText("마커 수 : "+makerListAdapter.getCount());
+        Log.d(TAG,"onWindowFocusChanged call!.");
     }
 }

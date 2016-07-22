@@ -17,6 +17,7 @@ public class MakerListAdapter extends BaseAdapter {
     private Context context;
     public List<AddressItem> mItems = new ArrayList<AddressItem>();
     GoogleMap googleMap;
+    boolean insertSuccessState;
 
     public MakerListAdapter(Context context) {
         this.context = context;
@@ -67,5 +68,13 @@ public class MakerListAdapter extends BaseAdapter {
 
     public void setGoogleMap(GoogleMap googleMap) {
         this.googleMap = googleMap;
+    }
+
+    public boolean isInsertSuccessState() {
+        return insertSuccessState;
+    }
+
+    public void setInsertSuccessState(boolean insertSuccessState) {
+        this.insertSuccessState = insertSuccessState;
     }
 }

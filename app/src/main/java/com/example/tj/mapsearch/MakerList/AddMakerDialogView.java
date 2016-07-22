@@ -11,6 +11,7 @@ import com.example.tj.mapsearch.R;
 public class AddMakerDialogView extends LinearLayout {
 
     EditText addmakerDialogView;
+    EditText updateMakerName;
     public AddMakerDialogView(final Context context) {
         super(context);
 
@@ -18,6 +19,7 @@ public class AddMakerDialogView extends LinearLayout {
         inflater.inflate(R.layout.add_maker_dialog_view,this,true);
 
         addmakerDialogView = (EditText)findViewById(R.id.addmakerDialogView);
+        updateMakerName = (EditText)findViewById(R.id.updateMakerName);
     }
 
     public LinearLayout getDialogView(){
@@ -26,5 +28,9 @@ public class AddMakerDialogView extends LinearLayout {
 
     public String getAddMakerDialogViewText(){
         return addmakerDialogView.getText().toString();
+    }
+
+    public String getUpdateMakerNameText(){
+        return updateMakerName.getText().toString();
     }
 }

@@ -5,7 +5,6 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -41,6 +40,7 @@ public class AddressConvert extends AppCompatActivity {
     AddressListAdapter addressListAdapter;
     SlidingPageAnimationListener animationListener;
     double lat, longi;
+    boolean notFoundAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,16 +102,15 @@ public class AddressConvert extends AppCompatActivity {
         String search = addressConvertIntent.getStringExtra("ADDRESS").toString();
         countView = (TextView)header.findViewById(R.id.count);
         address = (TextView)header.findViewById(R.id.address);
-        if(search != null){
-            findLatlng(search);
-            searchLocation();
-            address.setText("["+search+"]검색 결과");
-            countView.setText("결과 ["+addressListAdapter.getCount()+"]");
-        }
-        else {
-            address.setText("["+search+"]검색 결과");
-            countView.setText("결과 ["+addressListAdapter.getCount()+"]");
-            Toast.makeText(getApplicationContext(),"없는 주소이거나 주소명을 잘못 입력하셨습니다.",Toast.LENGTH_LONG).show();
+
+        findLatlng(search);
+        searchLocation();
+        address.setText("["+search+"]검색 결과");
+        countView.setText("결과 ["+addressListAdapter.getCount()+"]");
+        if(notFoundAddress){
+            Toast.makeText(getApplicationContext(),search+"로 검색된 결과 입니다. ",Toast.LENGTH_SHORT);
+        }else {
+            Toast.makeText(getApplicationContext(),search+"로 검색된 주소가 없습니다. ",Toast.LENGTH_SHORT);
         }
     }
 
@@ -133,56 +132,9 @@ public class AddressConvert extends AppCompatActivity {
                     }
                     lat = outAddr.getLatitude();
                     longi = outAddr.getLongitude();
-                }
-            }
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-    }
-    public void findLatlng(String searchStr, int size){
-        List<Address> addressList = null;
-        Geocoder gc = new Geocoder(getApplicationContext(),Locale.KOREA);
-        try{
-            addressList = gc.getFromLocationName(searchStr,size);  // 매치되는 주소 최대 1개만 가져오기
-            if(addressList != null)
-            {
-                for(int i = 0; i<addressList.size(); i++){
-                    String addressName = "";
-                    outAddr = addressList.get(i);
-                    addrCount = outAddr.getMaxAddressLineIndex()+1;
-                    outAddrStr = new StringBuffer();
-                    for(int k =0;k<addrCount;k++){
-                        outAddrStr.append(outAddr.getAddressLine(k));
-                        addressName = outAddrStr.toString();
-                    }
-                    lat = outAddr.getLatitude();
-                    longi = outAddr.getLongitude();
-                }
-            }
-        }catch (IOException e){
-            e.printStackTrace();
-        }
-    }
-
-    private void searchLocation(String searchStr){
-        List<Address> addressList = null;
-
-        try{
-            addressList = gc.getFromLocationName(searchStr,1);  // 매치되는 주소 최대 1개만 가져오기
-            if(addressList != null)
-            {
-                for(int i = 0; i<addressList.size(); i++){
-                    String addressName = "";
-                    outAddr = addressList.get(i);
-                    addrCount = outAddr.getMaxAddressLineIndex()+1;
-                    outAddrStr = new StringBuffer();
-                    for(int k =0;k<addrCount;k++){
-                        outAddrStr.append(outAddr.getAddressLine(k));
-                        addressName = outAddrStr.toString();
-                    }
-                    addressListAdapter.addItem(new AddressItem(addressName,outAddr.getLatitude(),outAddr.getLongitude()));
-
-                }
+                }notFoundAddress = true;
+            }else{
+                notFoundAddress = false;
             }
         }catch (IOException e){
             e.printStackTrace();
@@ -193,8 +145,7 @@ public class AddressConvert extends AppCompatActivity {
         List<Address> addressList = null;
 
         try{
-            addressList = gc.getFromLocation(lat,longi,10);  // 매치되는 주소 최대 10개만 가져오기
-            Log.d(TAG,"리턴된 주소의 수 : "+addressList.size());
+            addressList = gc.getFromLocation(lat,longi,20);  // 매치되는 주소 최대 20개만 가져오기
             if(addressList != null)
             {
                 for(int i = 0; i<addressList.size(); i++){
@@ -207,8 +158,9 @@ public class AddressConvert extends AppCompatActivity {
                         addressName = outAddrStr.toString();
                     }
                     addressListAdapter.addItem(new AddressItem(addressName,outAddr.getLatitude(),outAddr.getLongitude()));
-
-                }
+                }notFoundAddress = true;
+            }else{
+                notFoundAddress = false;
             }
         }catch (IOException e){
             e.printStackTrace();
