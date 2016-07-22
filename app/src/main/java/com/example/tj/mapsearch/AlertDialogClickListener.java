@@ -30,10 +30,10 @@ import java.util.Locale;
 public class AlertDialogClickListener implements DialogInterface.OnClickListener{
 
     private final static String TAG = "AlertDialogClickListener";
-    private int ALERTDIALOG_REQUEST_CODE;
-    private int ALERTDIALOG_REQUEST_CODE_ADDRESSCONVERT_ACTIVITY = 1;
-    private int ALERTDIALOG_REQUEST_CODE_MAKERLIST_ACTIVITY = 2;
-    private int ALERTDIALOG_REQUEST_CODE_ON_MAP_LONGCLICK_MAIN_ACTIVITY = 3;
+    private static int ALERTDIALOG_REQUEST_CODE;
+    private static int ALERTDIALOG_REQUEST_CODE_ADDRESSCONVERT_ACTIVITY = 1;
+    private static int ALERTDIALOG_REQUEST_CODE_MAKERLIST_ACTIVITY = 2;
+    private static int ALERTDIALOG_REQUEST_CODE_ON_MAP_LONGCLICK_MAIN_ACTIVITY = 3;
 
     GoogleMap googleMap;
     Context context;
@@ -50,7 +50,6 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
     int addrCount;
     StringBuffer outAddrStr;
     String tempAddressName;
-    boolean notFoundAddress;
 
     public AlertDialogClickListener(Context context, GoogleMap googleMap, DatabaseOpenHelper databaseOpenHelper, DialogView dialogView, int ALERTDIALOG_REQUEST_CODE) {
         this.context = context;
@@ -84,10 +83,13 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
                     addMakers();
                     isRecordInserted = insertingRecords();
                     flagCheckShowToast();
-                    break;
                 }else if(ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_MAKERLIST_ACTIVITY){
-                    findLatlng(addMakerDialogView.getAddMakerDialogViewText());
-                    if(notFoundAddress) {
+
+                    if(addMakerDialogView.getAddMakerDialogViewText().toString().equals("")){
+                        Toast.makeText(context,addMakerDialogView.getAddMakerDialogViewText()+"로 검색된 주소가 없습니다. ",Toast.LENGTH_SHORT);
+                    }
+                    else {
+                        findLatlng(addMakerDialogView.getAddMakerDialogViewText());
                         if (!addMakerDialogView.getUpdateMakerNameText().toString().equals("")) {
                             setPlaceInfomation(addMakerDialogView.getUpdateMakerNameText(), getLat(), getLongi());
                         } else if (addMakerDialogView.getUpdateMakerNameText().toString().equals("")) {
@@ -100,48 +102,26 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
                             makerListAdapter.notifyDataSetChanged();
                         }
                         flagCheckShowToast();
-                    }else {
-                        Toast.makeText(context,addressItem.getAddressName()+"로 검색된 주소가 없습니다. ",Toast.LENGTH_SHORT);
-                        return;
+                        addMakerDialogView.setAddmakerDialogView("");
+                        addMakerDialogView.setUpdateMakerName("");
                     }
-                    break;
                 }else if(ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_ON_MAP_LONGCLICK_MAIN_ACTIVITY){
-                    gc = new Geocoder(context, Locale.KOREA);
-                    searchLocation();
-                    if(notFoundAddress) {
+                    if(getTempAddressName().toString().equals("")){
+                        Toast.makeText(context,getTempAddressName()+"로 검색된 주소가 없습니다. ",Toast.LENGTH_SHORT);
+                    }else {
+                        gc = new Geocoder(context, Locale.KOREA);
+                        searchLocation();
                         setPlaceInfomation(getTempAddressName(),getLat(),getLongi());
                         addMakers(getTempAddressName(),getLat(),getLongi());
                         isRecordInserted = insertingRecords();
                         flagCheckShowToast();
-                    }else {
-                        Toast.makeText(context,addressItem.getAddressName()+"로 검색된 주소가 없습니다. ",Toast.LENGTH_SHORT);
-                        return;
                     }
-                    break;
-
                 }
-            case -2:  // 아니오
+                removeParentView();
                 break;
-        }
-
-        if((ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_ADDRESSCONVERT_ACTIVITY) ||
-                (ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_ON_MAP_LONGCLICK_MAIN_ACTIVITY)){
-            if (dialogView != null)
-            {
-                ViewGroup parent = (ViewGroup) dialogView.getParent();
-                if (parent != null)
-                {
-                    parent.removeView(dialogView);
-                }
-            }
-        }else if(ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_MAKERLIST_ACTIVITY){
-            if (addMakerDialogView != null) // 중복창 띄우기
-            {
-                ViewGroup parent = (ViewGroup) addMakerDialogView.getParent();
-                if (parent != null) {
-                    parent.removeView(addMakerDialogView);
-                }
-            }
+            case -2:  // 아니오
+                removeParentView();
+                break;
         }
     }
 
@@ -217,9 +197,6 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
                     setLat(outAddr.getLatitude());
                     setLongi(longi = outAddr.getLongitude());
                 }
-                notFoundAddress = true;
-            }else{
-                notFoundAddress = false;
             }
         }catch (IOException e){
             e.printStackTrace();
@@ -244,9 +221,6 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
                         setTempAddressName(outAddrStr.toString());
                     }
                 }
-                notFoundAddress = true;
-            }else{
-                notFoundAddress = false;
             }
 
         }catch (IOException e){
@@ -292,6 +266,30 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
             isRecordInserted = false;
         }else {
             Toast.makeText(context,addressItem.getAddressName()+"이(가) 마커리스트에 등록되지 않았습니다.",Toast.LENGTH_SHORT);
+        }
+    }
+
+
+    public void removeParentView(){
+        if((ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_ADDRESSCONVERT_ACTIVITY) ||
+                (ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_ON_MAP_LONGCLICK_MAIN_ACTIVITY)){
+            if (dialogView != null)
+            {
+                ViewGroup parent = (ViewGroup) dialogView.getParent();
+                if (parent != null)
+                {
+                    parent.removeView(dialogView);
+                }
+            }
+        }else if(ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_MAKERLIST_ACTIVITY){
+            Log.d(TAG,"뜨나여");
+            if (addMakerDialogView != null) // 중복창 띄우기
+            {
+                ViewGroup parent = (ViewGroup) addMakerDialogView.getParent();
+                if (parent != null) {
+                    parent.removeView(addMakerDialogView);
+                }
+            }
         }
     }
 }

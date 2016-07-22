@@ -1,5 +1,6 @@
 package com.example.tj.mapsearch.MakerList;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -34,7 +35,7 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
     private final static String TABLE_NAME = "makerlist";
     private final static String DATABASE_NAME = "maker.db";
     private final static int DATABASE_VERSION = 1;
-
+    private Context context;
     private int previousPosition = -1;
     private int forwordPosition = -1;
     TextView makerCount;
@@ -55,6 +56,8 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maker_list);
+
+        context = getApplicationContext();
         databaseOpenHelper = new DatabaseOpenHelper(getApplicationContext(),DATABASE_NAME,MODE_WORLD_WRITEABLE,DATABASE_VERSION);
         sqLiteDatabase = openOrCreateDatabase(DATABASE_NAME,MODE_WORLD_READABLE,null);
         sqLiteDatabase = databaseOpenHelper.getReadableDatabase();
@@ -86,28 +89,30 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
         makerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                if(position == getPreviousPosition()){
-                    if(animationListener.isPageOpen()){
-                        slidingLayout.startAnimation(behindAnim);
-                        setPreviousPosition(position);
-                    }
-                    else{
+                if(makerListAdapter.getCount()!=0){
+                    if(position == getPreviousPosition()){
+                        if(animationListener.isPageOpen()){
+                            slidingLayout.startAnimation(behindAnim);
+                            setPreviousPosition(position);
+                        }
+                        else{
+                            slidingLayout.setVisibility(View.VISIBLE);
+                            slidingLayout.startAnimation(showAnim);
+                            setPreviousPosition(position);
+                            setForwordPosition(position);
+                        }
+                    }else {
                         slidingLayout.setVisibility(View.VISIBLE);
                         slidingLayout.startAnimation(showAnim);
                         setPreviousPosition(position);
                         setForwordPosition(position);
                     }
-                }else {
-                    slidingLayout.setVisibility(View.VISIBLE);
-                    slidingLayout.startAnimation(showAnim);
-                    setPreviousPosition(position);
-                    setForwordPosition(position);
                 }
             }
         });
 
         makerListAdapter.setGoogleMap(googleMapData.getGoogleMap());
-        alertDialogClickListener = new AlertDialogClickListener(getApplicationContext(), addMakerDialogView, MAINACTIVITY_ALERTDIALOG_REQUEST_CODE, makerListAdapter, databaseOpenHelper);
+        alertDialogClickListener = new AlertDialogClickListener(context, addMakerDialogView, MAINACTIVITY_ALERTDIALOG_REQUEST_CODE, makerListAdapter, databaseOpenHelper);
 
         makerCount = (TextView)header.findViewById(R.id.makerCount);
         makerCount.setText("마커 수 : "+makerListAdapter.getCount());

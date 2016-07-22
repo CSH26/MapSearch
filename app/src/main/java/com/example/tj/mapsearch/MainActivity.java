@@ -196,6 +196,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     protected void onResume() {
         super.onResume();
+        addressBox.setText("");
         // 액티비티가 나타나면 센서매니저에 리스너 등록
         if(googleMap != null){
             Log.d(TAG," onResume called! ");
@@ -257,6 +258,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
         }
     }
+
 
     @Override
     public void onClick(View view) {

@@ -30,6 +30,14 @@ public class AddMakerDialogView extends LinearLayout {
         return addmakerDialogView.getText().toString();
     }
 
+    public void setAddmakerDialogView(String text) {
+        this.addmakerDialogView.setText(text);
+    }
+
+    public void setUpdateMakerName(String text) {
+        this.updateMakerName.setText(text);
+    }
+
     public String getUpdateMakerNameText(){
         return updateMakerName.getText().toString();
     }

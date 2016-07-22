@@ -40,7 +40,6 @@ public class AddressConvert extends AppCompatActivity {
     AddressListAdapter addressListAdapter;
     SlidingPageAnimationListener animationListener;
     double lat, longi;
-    boolean notFoundAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,22 +63,24 @@ public class AddressConvert extends AppCompatActivity {
         addressList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                if(position == getPreviousPosition()){
-                    if(animationListener.isPageOpen()){
-                        slidingLayout.startAnimation(behindAnim);
-                        setPreviousPosition(position);
-                    }
-                    else{
+                if(addressListAdapter.getCount()!=0){
+                    if(position == getPreviousPosition()){
+                        if(animationListener.isPageOpen()){
+                            slidingLayout.startAnimation(behindAnim);
+                            setPreviousPosition(position);
+                        }
+                        else{
+                            slidingLayout.setVisibility(View.VISIBLE);
+                            slidingLayout.startAnimation(showAnim);
+                            setPreviousPosition(position);
+                            setForwordPosition(position);
+                        }
+                    }else {
                         slidingLayout.setVisibility(View.VISIBLE);
                         slidingLayout.startAnimation(showAnim);
                         setPreviousPosition(position);
                         setForwordPosition(position);
                     }
-                }else {
-                    slidingLayout.setVisibility(View.VISIBLE);
-                    slidingLayout.startAnimation(showAnim);
-                    setPreviousPosition(position);
-                    setForwordPosition(position);
                 }
             }
         });
@@ -103,14 +104,16 @@ public class AddressConvert extends AppCompatActivity {
         countView = (TextView)header.findViewById(R.id.count);
         address = (TextView)header.findViewById(R.id.address);
 
-        findLatlng(search);
-        searchLocation();
         address.setText("["+search+"]검색 결과");
-        countView.setText("결과 ["+addressListAdapter.getCount()+"]");
-        if(notFoundAddress){
-            Toast.makeText(getApplicationContext(),search+"로 검색된 결과 입니다. ",Toast.LENGTH_SHORT);
-        }else {
+
+        String tempAddress = search.trim();
+        if(tempAddress.getBytes().length <= 0){//빈값이 넘어올때의 처리
             Toast.makeText(getApplicationContext(),search+"로 검색된 주소가 없습니다. ",Toast.LENGTH_SHORT);
+        }else {
+            Toast.makeText(getApplicationContext(),search+"로 검색된 결과 입니다. ",Toast.LENGTH_SHORT);
+            findLatlng(search);
+            searchLocation();
+            countView.setText("결과 ["+addressListAdapter.getCount()+"]");
         }
     }
 
@@ -132,9 +135,7 @@ public class AddressConvert extends AppCompatActivity {
                     }
                     lat = outAddr.getLatitude();
                     longi = outAddr.getLongitude();
-                }notFoundAddress = true;
-            }else{
-                notFoundAddress = false;
+                }
             }
         }catch (IOException e){
             e.printStackTrace();
@@ -158,9 +159,7 @@ public class AddressConvert extends AppCompatActivity {
                         addressName = outAddrStr.toString();
                     }
                     addressListAdapter.addItem(new AddressItem(addressName,outAddr.getLatitude(),outAddr.getLongitude()));
-                }notFoundAddress = true;
-            }else{
-                notFoundAddress = false;
+                }
             }
         }catch (IOException e){
             e.printStackTrace();
