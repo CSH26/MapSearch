@@ -30,7 +30,7 @@ import com.example.tj.mapsearch.SlidingPageAnimationListener;
 public class MakerListActivity extends AppCompatActivity implements View.OnClickListener{
 
     private final String TAG = "MakerListActivity";
-    private final static int MAINACTIVITY_ALERTDIALOG_REQUEST_CODE = 2;
+    private final static int MAKERLIST_ACTIVITY_ALERTDIALOG_REQUEST_CODE = 2;
     private final static int MAKER_LIST_ACTIVITY = 300;
     private final static String TABLE_NAME = "makerlist";
     private final static String DATABASE_NAME = "maker.db";
@@ -112,7 +112,7 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
         });
 
         makerListAdapter.setGoogleMap(googleMapData.getGoogleMap());
-        alertDialogClickListener = new AlertDialogClickListener(context, addMakerDialogView, MAINACTIVITY_ALERTDIALOG_REQUEST_CODE, makerListAdapter, databaseOpenHelper);
+        alertDialogClickListener = new AlertDialogClickListener(context, addMakerDialogView, MAKERLIST_ACTIVITY_ALERTDIALOG_REQUEST_CODE, makerListAdapter, databaseOpenHelper);
 
         makerCount = (TextView)header.findViewById(R.id.makerCount);
         makerCount.setText("마커 수 : "+makerListAdapter.getCount());
@@ -197,6 +197,7 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
 
         switch (item.getItemId()) {
             case R.id.addmaker:
+                alertDialogClickListener.setALERTDIALOG_REQUEST_CODE(MAKERLIST_ACTIVITY_ALERTDIALOG_REQUEST_CODE);
                 createAlertDialog();
                 aBuilder.show();
                 break;

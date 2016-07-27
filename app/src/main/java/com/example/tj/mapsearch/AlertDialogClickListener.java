@@ -43,6 +43,7 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
     boolean isRecordInserted;
     DialogView dialogView;
     AddMakerDialogView addMakerDialogView;
+    AddMakerLongClickDialogView addMakerLongClickDialogView;
     MakerListAdapter makerListAdapter;
     Geocoder gc;
     Address outAddr;
@@ -51,6 +52,7 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
     StringBuffer outAddrStr;
     String tempAddressName;
 
+    // 컨버터액티비티에서 추가
     public AlertDialogClickListener(Context context, GoogleMap googleMap, DatabaseOpenHelper databaseOpenHelper, DialogView dialogView, int ALERTDIALOG_REQUEST_CODE) {
         this.context = context;
         this.googleMap = googleMap;
@@ -61,6 +63,7 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
         this.ALERTDIALOG_REQUEST_CODE = ALERTDIALOG_REQUEST_CODE;
     }
 
+    // 마커리스트에서 메뉴 클릭
     public AlertDialogClickListener(Context context, AddMakerDialogView addMakerDialogView, int ALERTDIALOG_REQUEST_CODE,  MakerListAdapter makerListAdapter, DatabaseOpenHelper databaseOpenHelper) {
         this.context = context;
         isRecordInserted = false;
@@ -71,19 +74,34 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
         this.databaseOpenHelper = databaseOpenHelper;
         this.sqLiteDatabase = this.databaseOpenHelper.getSqLiteDatabase();
         this.googleMap = makerListAdapter.getGoogleMap();
+        Log.d(TAG,"마커리스트");
+        Log.d(TAG,"넘어온 번호" +ALERTDIALOG_REQUEST_CODE);
     }
 
+    // 구글맵 롱클릭
+    public AlertDialogClickListener(Context context, GoogleMap googleMap, AddMakerLongClickDialogView addMakerLongClickDialogView, int ALERTDIALOG_REQUEST_CODE, DatabaseOpenHelper databaseOpenHelper) {
+        this.context = context;
+        isRecordInserted = false;
+        this.addMakerLongClickDialogView = addMakerLongClickDialogView;
+        this.ALERTDIALOG_REQUEST_CODE = ALERTDIALOG_REQUEST_CODE;
+        gc = new Geocoder(context, Locale.KOREA);
+        this.databaseOpenHelper = databaseOpenHelper;
+        this.sqLiteDatabase = this.databaseOpenHelper.getSqLiteDatabase();
+        this.googleMap = googleMap;
+        Log.d(TAG,"롱클릭");
+        Log.d(TAG,"넘어온 번호" +ALERTDIALOG_REQUEST_CODE);
+    }
 
     @Override
     public void onClick(DialogInterface dialog, int which) {
 
         switch (which){
             case -1: // 예
-                if(ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_ADDRESSCONVERT_ACTIVITY){
+                if(getALERTDIALOG_REQUEST_CODE() == ALERTDIALOG_REQUEST_CODE_ADDRESSCONVERT_ACTIVITY){
                     addMakers();
                     isRecordInserted = insertingRecords();
                     flagCheckShowToast();
-                }else if(ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_MAKERLIST_ACTIVITY){
+                }else if(getALERTDIALOG_REQUEST_CODE() == ALERTDIALOG_REQUEST_CODE_MAKERLIST_ACTIVITY){
 
                     if(addMakerDialogView.getAddMakerDialogViewText().toString().equals("")){
                         Toast.makeText(context,addMakerDialogView.getAddMakerDialogViewText()+"로 검색된 주소가 없습니다. ",Toast.LENGTH_SHORT);
@@ -105,17 +123,18 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
                         addMakerDialogView.setAddmakerDialogView("");
                         addMakerDialogView.setUpdateMakerName("");
                     }
-                }else if(ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_ON_MAP_LONGCLICK_MAIN_ACTIVITY){
-                    if(getTempAddressName().toString().equals("")){
-                        Toast.makeText(context,getTempAddressName()+"로 검색된 주소가 없습니다. ",Toast.LENGTH_SHORT);
+                }else if(getALERTDIALOG_REQUEST_CODE() == ALERTDIALOG_REQUEST_CODE_ON_MAP_LONGCLICK_MAIN_ACTIVITY){
+                    searchLocation();
+                    if(!addMakerLongClickDialogView.getUpdateLongClickMakerNameText().equals("")){
+                        setPlaceInfomation(addMakerLongClickDialogView.getUpdateLongClickMakerNameText(),getLat(),getLongi());
                     }else {
-                        gc = new Geocoder(context, Locale.KOREA);
-                        searchLocation();
                         setPlaceInfomation(getTempAddressName(),getLat(),getLongi());
-                        addMakers(getTempAddressName(),getLat(),getLongi());
-                        isRecordInserted = insertingRecords();
-                        flagCheckShowToast();
                     }
+                    addMakers(getTempAddressName(),getLat(),getLongi());
+                    isRecordInserted = insertingRecords();
+                    flagCheckShowToast();
+
+                    addMakerLongClickDialogView.setUpdateLongClickMakerNameText("");
                 }
                 removeParentView();
                 break;
@@ -271,8 +290,7 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
 
 
     public void removeParentView(){
-        if((ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_ADDRESSCONVERT_ACTIVITY) ||
-                (ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_ON_MAP_LONGCLICK_MAIN_ACTIVITY)){
+        if((ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_ADDRESSCONVERT_ACTIVITY)){
             if (dialogView != null)
             {
                 ViewGroup parent = (ViewGroup) dialogView.getParent();
@@ -282,12 +300,21 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
                 }
             }
         }else if(ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_MAKERLIST_ACTIVITY){
-            Log.d(TAG,"뜨나여");
+
             if (addMakerDialogView != null) // 중복창 띄우기
             {
                 ViewGroup parent = (ViewGroup) addMakerDialogView.getParent();
                 if (parent != null) {
                     parent.removeView(addMakerDialogView);
+                }
+            }
+        }else if(ALERTDIALOG_REQUEST_CODE == ALERTDIALOG_REQUEST_CODE_ON_MAP_LONGCLICK_MAIN_ACTIVITY){
+            if (addMakerLongClickDialogView != null)
+            {
+                ViewGroup parent = (ViewGroup) addMakerLongClickDialogView.getParent();
+                if (parent != null)
+                {
+                    parent.removeView(addMakerLongClickDialogView);
                 }
             }
         }

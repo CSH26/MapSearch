@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
 
         alertDialogClickListener = new AlertDialogClickListener(getApplicationContext(),googleMap,databaseOpenHelper, dialogView, MAINACTIVITY_ALERTDIALOG_REQUEST_CODE);
-        GoogleMapLongClickListener googleMapLongClickListener = new GoogleMapLongClickListener(getApplicationContext(), alertDialogClickListener, aBuilder, dialogView);
+        GoogleMapLongClickListener googleMapLongClickListener = new GoogleMapLongClickListener(getApplicationContext(), aBuilder, googleMap, databaseOpenHelper);
         this.googleMap.setOnMapLongClickListener(googleMapLongClickListener);
         MapClass mapClass = new MapClass(googleMap, getApplicationContext());
         startLocationService(mapClass);
@@ -337,8 +337,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 double longitude = data.getExtras().getDouble("LONGITUDE");
 
                 googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude,longitude),15));
-                alertDialogClickListener.setPlaceInfomation(addressName,latitude,longitude);
                 alertDialogClickListener.setALERTDIALOG_REQUEST_CODE(MAINACTIVITY_ALERTDIALOG_REQUEST_CODE);
+                alertDialogClickListener.setPlaceInfomation(addressName,latitude,longitude);
                 createAlertDialog();
                 aBuilder.show();
             }

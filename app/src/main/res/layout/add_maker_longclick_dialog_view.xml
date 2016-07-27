@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:id="@+id/dialogLayout"
+    android:layout_marginLeft="20dp">
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="18dp"
+            android:hint="입력하지 않으면 기본 주소명으로 등록됩니다."
+            android:id="@+id/updateLongClickMakerName" />
+
+</LinearLayout>
