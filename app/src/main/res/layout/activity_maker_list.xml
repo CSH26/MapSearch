@@ -55,8 +55,17 @@
             android:background="@drawable/selector_button_click"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="이동"
+            android:text="맵으로 이동"
             android:id="@+id/moveMaker" />
+
+        <Button
+            android:layout_margin="10dp"
+            android:layout_gravity="center"
+            android:background="@drawable/selector_button_click"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="마커명 변경"
+            android:id="@+id/updateMaker" />
     </LinearLayout>
 
 </LinearLayout>

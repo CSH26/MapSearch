@@ -1,13 +1,19 @@
 package com.example.tj.mapsearch.MakerList;
 
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,6 +32,7 @@ import com.example.tj.mapsearch.Database.DatabaseOpenHelper;
 import com.example.tj.mapsearch.GoogleMapData;
 import com.example.tj.mapsearch.R;
 import com.example.tj.mapsearch.SlidingPageAnimationListener;
+import com.example.tj.mapsearch.UpdateMakerDialogView;
 
 public class MakerListActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -38,7 +45,7 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
     private Context context;
     private int previousPosition = -1;
     private int forwordPosition = -1;
-    TextView makerCount;
+    TextView makerCount, baseMakerName;
     Button deleteMaker, moveMaker;
     ListView makerListView;
     Animation showAnim, behindAnim;
@@ -51,12 +58,16 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
     AlertDialog.Builder aBuilder;
     AddMakerDialogView addMakerDialogView;
     GoogleMapData googleMapData;
+    UpdateMakerDialogView updateMakerDialogView;
+    UpdateMakerNameDialog updateMakerNameDialog;
+    static boolean isPressed = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maker_list);
 
+        updateMakerDialogView = new UpdateMakerDialogView(this);
         context = getApplicationContext();
         databaseOpenHelper = new DatabaseOpenHelper(getApplicationContext(),DATABASE_NAME,MODE_WORLD_WRITEABLE,DATABASE_VERSION);
         sqLiteDatabase = openOrCreateDatabase(DATABASE_NAME,MODE_WORLD_READABLE,null);
@@ -182,7 +193,13 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
                 setResult(RESULT_OK,resultIntent);
                 finish();
                 break;
-
+            case R.id.updateMaker:
+                updateMakerNameDialog = new UpdateMakerNameDialog(makerListAdapter.getItem(getForwordPosition()-1).getAddressName());
+                updateMakerNameDialog.show(getFragmentManager(),"TAG");
+                if(isPressed){
+                    Log.d(TAG,"변경할 이름은 "+updateMakerDialogView.getUpdateMakerName());
+                    makerListAdapter.getItem(getForwordPosition()-1).setAddressName(updateMakerDialogView.getUpdateMakerName());
+                }
         }
     }
 
@@ -226,5 +243,78 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
         super.onWindowFocusChanged(hasFocus);
         makerCount.setText("마커 수 : "+makerListAdapter.getCount());
         Log.d(TAG,"onWindowFocusChanged call!.");
+    }
+
+    public static class UpdateMakerNameDialog extends DialogFragment {
+
+        String tempAddressName;
+        String updateMakerName;
+
+        public UpdateMakerNameDialog(String tempAddressName) {
+            this.tempAddressName = tempAddressName;
+            isPressed = false;
+        }
+
+        @NonNull
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            AlertDialog.Builder mBuilder = new AlertDialog.Builder(getActivity());
+            final UpdateMakerDialogView updateMakerDialogView = new UpdateMakerDialogView(getActivity());
+            updateMakerDialogView.setBaseMakerName(tempAddressName);
+            mBuilder.setView(updateMakerDialogView.getUpdateMakerDialogView());
+            mBuilder.setTitle("마커명 변경");
+            mBuilder.setMessage("기본 마커명");
+            mBuilder.setPositiveButton("변경", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    setUpdateMakerName(updateMakerDialogView.getUpdateMakerName());
+                }
+            });
+            mBuilder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            });
+            return mBuilder.create();
+        }
+
+        @Override
+        public void onStop() {
+            isPressed = true;
+            super.onStop();
+        }
+
+        public String getTempAddressName() {
+            return tempAddressName;
+        }
+
+        public void setTempAddressName(String tempAddressName) {
+            this.tempAddressName = tempAddressName;
+        }
+
+        public String getUpdateMakerName() {
+            return updateMakerName;
+        }
+
+        public void setUpdateMakerName(String updateMakerName) {
+            this.updateMakerName = updateMakerName;
+        }
+    }
+
+    public boolean updatingRecords(){
+        String query = "update userinfo set userpw = ?, username = ?, useradd = ?, usertel = ? where userid = ? and userpw = ?";
+
+        String UPDATE_RECORD_SQL = "update "+databaseOpenHelper.getTableName()+" set address_name = "
+                +"\""+addressItem.getAddressName()+"\" where address_name = "
+                +"\""+Double.toString(addressItem.getLongitude())+"\");";
+
+        try {
+            sqLiteDatabase.execSQL(UPDATE_RECORD_SQL);
+            return true;
+        }catch (Exception e){
+            Log.d(TAG,"EXCEPTION IN UPDATE_RECORD_SQL.",e);
+            return false;
+        }
     }
 }

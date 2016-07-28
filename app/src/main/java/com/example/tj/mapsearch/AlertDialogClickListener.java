@@ -178,9 +178,6 @@ public class AlertDialogClickListener implements DialogInterface.OnClickListener
     }
 
     public boolean insertingRecords(){
-        Log.d(TAG," 주소명 "+addressItem.getAddressName());
-        Log.d(TAG," 위도 "+Double.toString(addressItem.getLatitude()));
-        Log.d(TAG," 경도 "+Double.toString(addressItem.getLongitude()));
 
         String INSERT_RECORD_SQL = "insert into "+databaseOpenHelper.getTableName()+"("
                 +"address_name, latitude, longitude) values ("
