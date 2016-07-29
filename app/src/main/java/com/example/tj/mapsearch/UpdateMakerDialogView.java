@@ -28,6 +28,10 @@ public class UpdateMakerDialogView extends LinearLayout {
         baseMakerName.setText(text);
     }
 
+    public String getBaseMakerName(){
+        return baseMakerName.getText().toString();
+    }
+
     public String getUpdateMakerName(){
         return updateMakerName.getText().toString();
     }

@@ -67,7 +67,6 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maker_list);
 
-        updateMakerDialogView = new UpdateMakerDialogView(this);
         context = getApplicationContext();
         databaseOpenHelper = new DatabaseOpenHelper(getApplicationContext(),DATABASE_NAME,MODE_WORLD_WRITEABLE,DATABASE_VERSION);
         sqLiteDatabase = openOrCreateDatabase(DATABASE_NAME,MODE_WORLD_READABLE,null);
@@ -198,7 +197,11 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
                 updateMakerNameDialog.show(getFragmentManager(),"TAG");
                 if(isPressed){
                     Log.d(TAG,"변경할 이름은 "+updateMakerDialogView.getUpdateMakerName());
-                    makerListAdapter.getItem(getForwordPosition()-1).setAddressName(updateMakerDialogView.getUpdateMakerName());
+                    updatingRecords(updateMakerDialogView.getUpdateMakerName(), updateMakerDialogView.getBaseMakerName());
+                    Log.d(TAG,"변경전 이름은 "+makerListAdapter.getItem(getForwordPosition()-1).getAddressName());
+                    makerListAdapter.setItemName(getForwordPosition()-1,updateMakerDialogView.getUpdateMakerName());
+                    Log.d(TAG,"변경후 이름은 "+makerListAdapter.getItem(getForwordPosition()-1).getAddressName());
+                    makerListAdapter.notifyDataSetChanged();
                 }
         }
     }
@@ -245,7 +248,7 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
         Log.d(TAG,"onWindowFocusChanged call!.");
     }
 
-    public static class UpdateMakerNameDialog extends DialogFragment {
+    public class UpdateMakerNameDialog extends DialogFragment {
 
         String tempAddressName;
         String updateMakerName;
@@ -259,7 +262,7 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
         @Override
         public Dialog onCreateDialog(Bundle savedInstanceState) {
             AlertDialog.Builder mBuilder = new AlertDialog.Builder(getActivity());
-            final UpdateMakerDialogView updateMakerDialogView = new UpdateMakerDialogView(getActivity());
+            updateMakerDialogView = new UpdateMakerDialogView(getActivity());
             updateMakerDialogView.setBaseMakerName(tempAddressName);
             mBuilder.setView(updateMakerDialogView.getUpdateMakerDialogView());
             mBuilder.setTitle("마커명 변경");
@@ -302,12 +305,13 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
         }
     }
 
-    public boolean updatingRecords(){
+    public boolean updatingRecords(String updateName, String baseName){
         String query = "update userinfo set userpw = ?, username = ?, useradd = ?, usertel = ? where userid = ? and userpw = ?";
 
+
         String UPDATE_RECORD_SQL = "update "+databaseOpenHelper.getTableName()+" set address_name = "
-                +"\""+addressItem.getAddressName()+"\" where address_name = "
-                +"\""+Double.toString(addressItem.getLongitude())+"\");";
+                +"\""+updateName+"\" where address_name = "
+                +"\""+baseName+"\");";
 
         try {
             sqLiteDatabase.execSQL(UPDATE_RECORD_SQL);

@@ -42,6 +42,10 @@ public class MakerListAdapter extends BaseAdapter {
         mItems.add(addressItem);
     }
 
+    public void setItemName(int arrayPosition, String setText){
+        mItems.get(arrayPosition).setAddressName(setText);
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup viewGroup) {
         MakerListView makerListView;
