@@ -13,7 +13,6 @@ import android.support.annotation.NonNull;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,7 +31,6 @@ import com.example.tj.mapsearch.Database.DatabaseOpenHelper;
 import com.example.tj.mapsearch.GoogleMapData;
 import com.example.tj.mapsearch.R;
 import com.example.tj.mapsearch.SlidingPageAnimationListener;
-import com.example.tj.mapsearch.UpdateMakerDialogView;
 
 public class MakerListActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -58,8 +56,7 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
     AlertDialog.Builder aBuilder;
     AddMakerDialogView addMakerDialogView;
     GoogleMapData googleMapData;
-    UpdateMakerDialogView updateMakerDialogView;
-    UpdateMakerNameDialog updateMakerNameDialog;
+
     static boolean isPressed = false;
 
     @Override
@@ -192,17 +189,6 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
                 setResult(RESULT_OK,resultIntent);
                 finish();
                 break;
-            case R.id.updateMaker:
-                updateMakerNameDialog = new UpdateMakerNameDialog(makerListAdapter.getItem(getForwordPosition()-1).getAddressName());
-                updateMakerNameDialog.show(getFragmentManager(),"TAG");
-                if(isPressed){
-                    Log.d(TAG,"변경할 이름은 "+updateMakerDialogView.getUpdateMakerName());
-                    updatingRecords(updateMakerDialogView.getUpdateMakerName(), updateMakerDialogView.getBaseMakerName());
-                    Log.d(TAG,"변경전 이름은 "+makerListAdapter.getItem(getForwordPosition()-1).getAddressName());
-                    makerListAdapter.setItemName(getForwordPosition()-1,updateMakerDialogView.getUpdateMakerName());
-                    Log.d(TAG,"변경후 이름은 "+makerListAdapter.getItem(getForwordPosition()-1).getAddressName());
-                    makerListAdapter.notifyDataSetChanged();
-                }
         }
     }
 
@@ -248,77 +234,5 @@ public class MakerListActivity extends AppCompatActivity implements View.OnClick
         Log.d(TAG,"onWindowFocusChanged call!.");
     }
 
-    public class UpdateMakerNameDialog extends DialogFragment {
 
-        String tempAddressName;
-        String updateMakerName;
-
-        public UpdateMakerNameDialog(String tempAddressName) {
-            this.tempAddressName = tempAddressName;
-            isPressed = false;
-        }
-
-        @NonNull
-        @Override
-        public Dialog onCreateDialog(Bundle savedInstanceState) {
-            AlertDialog.Builder mBuilder = new AlertDialog.Builder(getActivity());
-            updateMakerDialogView = new UpdateMakerDialogView(getActivity());
-            updateMakerDialogView.setBaseMakerName(tempAddressName);
-            mBuilder.setView(updateMakerDialogView.getUpdateMakerDialogView());
-            mBuilder.setTitle("마커명 변경");
-            mBuilder.setMessage("기본 마커명");
-            mBuilder.setPositiveButton("변경", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    setUpdateMakerName(updateMakerDialogView.getUpdateMakerName());
-                }
-            });
-            mBuilder.setNegativeButton("취소", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-
-                }
-            });
-            return mBuilder.create();
-        }
-
-        @Override
-        public void onStop() {
-            isPressed = true;
-            super.onStop();
-        }
-
-        public String getTempAddressName() {
-            return tempAddressName;
-        }
-
-        public void setTempAddressName(String tempAddressName) {
-            this.tempAddressName = tempAddressName;
-        }
-
-        public String getUpdateMakerName() {
-            return updateMakerName;
-        }
-
-        public void setUpdateMakerName(String updateMakerName) {
-            this.updateMakerName = updateMakerName;
-        }
-    }
-
-    public boolean updatingRecords(String updateName, String baseName){
-        String query = "update userinfo set userpw = ?, username = ?, useradd = ?, usertel = ? where userid = ? and userpw = ?";
-
-
-        String UPDATE_RECORD_SQL = "update "+databaseOpenHelper.getTableName()+" set address_name = "
-                +"\""+updateName+"\" where address_name = "
-                +"\""+baseName+"\");";
-
-        try {
-            sqLiteDatabase.execSQL(UPDATE_RECORD_SQL);
-            return true;
-        }catch (Exception e){
-            Log.d(TAG,"EXCEPTION IN UPDATE_RECORD_SQL.",e);
-            return false;
-        }
-    }
 }
